@@ -17,32 +17,47 @@
 	aside {
 		flex: 0;
 	}
+
+	.units {
+		display: flex;
+		flex-flow: row;
+	}
+	.units input[type=radio] {
+		display: none;
+	}
+	.units input[type=radio] + label {
+		background-color: #DDDDDD;
+		flex: 1;
+		text-align: center;
+	}
+	.units input[type=radio]:checked + label {
+		background-color: #ba75c7;
+	}
 </style>
 
 <!--suppress UnnecessaryLabelJS -->
 <script>
 	let sides = 4;
 	let height = 5;
-	let lowerRadius = 5;
-	let upperOffset = 0;
+	let baseSideLen = 5;
+	let topSideLen = 5;
+	let units = 'in';
 
 	let walls;
 	$: {
-		const upperRadius = lowerRadius + upperOffset;
-		// We're going to need this later: convert from the upper radius to an upper side length.
-		// it's trigonometry i did in my head so inb4 it's completely wrong
-		const upperSideLength = 2 * upperRadius * Math.sin(Math.PI / sides);
+		// more fun trig times, which it took several tries to get right
+		const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
 		walls = [];
 		for (let k = 0; k < sides; k++) {
 			const theta = 2 * Math.PI * k / sides;
-			const x = 50 + Math.cos(theta) * lowerRadius;
-			const y = 50 + Math.sin(theta) * lowerRadius;
+			const x = 50 + Math.cos(theta) * baseRadius;
+			const y = 50 + Math.sin(theta) * baseRadius;
 			let wallD = `M ${x},${y} `;
 			// Hoooooooo boy, this sucks.
 			// So first, we find the midpoint of this side:
 			const nextTheta = 2 * Math.PI * (k + 1) / sides;
-			const nextX = 50 + Math.cos(nextTheta) * lowerRadius;
-			const nextY = 50 + Math.sin(nextTheta) * lowerRadius;
+			const nextX = 50 + Math.cos(nextTheta) * baseRadius;
+			const nextY = 50 + Math.sin(nextTheta) * baseRadius;
 			const lowerMidX = (x + nextX) / 2;
 			const lowerMidY = (y + nextY) / 2;
 			// Then, we find the angle from the center to that midpoint:
@@ -52,11 +67,11 @@
 			const upperMidY = lowerMidY + Math.sin(midTheta) * height;
 			// Then, we go perpendicular to that angle, at a distance upperSideLength/2:
 			const perpMidTheta = midTheta + Math.PI / 2;
-			const upper1X = upperMidX - Math.cos(perpMidTheta) * upperSideLength / 2;
-			const upper1Y = upperMidY - Math.sin(perpMidTheta) * upperSideLength / 2;
+			const upper1X = upperMidX - Math.cos(perpMidTheta) * topSideLen / 2;
+			const upper1Y = upperMidY - Math.sin(perpMidTheta) * topSideLen / 2;
 			// Then, we go the other direction perpendicular, same distance:
-			const upper2X = upperMidX + Math.cos(perpMidTheta) * upperSideLength / 2;
-			const upper2Y = upperMidY + Math.sin(perpMidTheta) * upperSideLength / 2;
+			const upper2X = upperMidX + Math.cos(perpMidTheta) * topSideLen / 2;
+			const upper2Y = upperMidY + Math.sin(perpMidTheta) * topSideLen / 2;
 			// Then, at long last, we glue it all together:
 			wallD += `L ${upper1X},${upper1Y} ${upper2X},${upper2Y} ${nextX},${nextY} z`;
 			walls.push(wallD);
@@ -85,12 +100,16 @@
 							 name="height"></label>
 	</fieldset>
 	<fieldset>
-		<label>Lower Radius <input type="number" min="1" max="20" bind:value={lowerRadius}
-								   name="lowerRadius"></label>
+		<label>Base Side Length <input type="number" min="1" max="20" bind:value={baseSideLen}
+								       name="lowerRadius"></label>
 	</fieldset>
 	<fieldset>
-		<label>Upper/Lower Offset <input type="number" min="-10" max="10" bind:value={upperOffset}
-										 name="upperOffset"></label>
+		<label>Top Side Length <input type="number" min="1" max="20" bind:value={topSideLen}
+									  name="upperOffset"></label>
+	</fieldset>
+	<fieldset class="units">
+		<input type="radio" bind:group={units} value="in" id="units-in"><label for="units-in">in</label>
+		<input type="radio" bind:group={units} value="cm" id="units-cm"><label for="units-cm">cm</label>
 	</fieldset>
 </aside>
 </article>
