@@ -43,6 +43,7 @@
 	let topSideLen = 5;
 	let units = 'in';
 
+	let maxTopSideLen;
 	let walls;
 	$: {
 		// more fun trig times, which it took several tries to get right
@@ -76,6 +77,9 @@
 			wallD += `L ${upper1X},${upper1Y} ${upper2X},${upper2Y} ${nextX},${nextY} z`;
 			walls.push(wallD);
 		}
+		const baseApothem = baseRadius * Math.cos(Math.PI / sides);
+		const topApothem = baseApothem + height;
+		maxTopSideLen = topApothem * 2 * Math.tan(Math.PI / sides);
 	}
 </script>
 
@@ -92,19 +96,19 @@
 <aside>
 	<h2>Prism</h2>
 	<fieldset>
-		<label>Sides <input type="number" min="3" max="8" bind:value={sides}
+		<label>Sides <input type="number" min="3" bind:value={sides}
 							name="sides"></label>
 	</fieldset>
 	<fieldset>
-		<label>Height <input type="number" min="1" max="20" bind:value={height}
+		<label>Height <input type="number" min="1" bind:value={height}
 							 name="height"></label>
 	</fieldset>
 	<fieldset>
-		<label>Base Side Length <input type="number" min="1" max="20" bind:value={baseSideLen}
+		<label>Base Side Length <input type="number" min="1" bind:value={baseSideLen}
 								       name="lowerRadius"></label>
 	</fieldset>
 	<fieldset>
-		<label>Top Side Length <input type="number" min="1" max="20" bind:value={topSideLen}
+		<label>Top Side Length <input type="number" min="1" max={maxTopSideLen} bind:value={topSideLen}
 									  name="upperOffset"></label>
 	</fieldset>
 	<fieldset class="units">
