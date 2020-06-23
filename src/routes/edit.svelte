@@ -69,25 +69,37 @@
 <aside>
 	<h2>Prism</h2>
 	<fieldset>
-		<label>Sides <input type="number" min="3" bind:value={sides}
-							name="sides"></label>
+		<label>
+			Sides
+			<input type="range" min="3" bind:value={sides} name="sidessl">
+			<input type="number" min="3" bind:value={sides} name="sides">
+		</label>
 	</fieldset>
 	<fieldset>
-		<label>Height <input type="number" min="1" bind:value={height}
-							 name="height"></label>
+		<label>
+			Height
+			<input type="range" min="1" bind:value={height} name="heightsl">
+			<input type="number" min="1" bind:value={height} name="height">
+		</label>
 	</fieldset>
 	<fieldset>
-		<label>Base Side Length <input type="number" min="1" bind:value={baseSideLen}
-								       name="lowerRadius"></label>
+		<label>
+			Bottom Side Length
+			<input type="range" min="1" bind:value={baseSideLen} name="lRsl">
+			<input type="number" min="1" bind:value={baseSideLen} name="lowerRadius">
+		</label>
 	</fieldset>
 	<fieldset>
-		<label>Top Side Length <input type="number" min="1" max={maxTopSideLen} bind:value={topSideLen}
-									  name="upperOffset"></label>
+		<label>
+			Top Side Length
+			<input type="range" min="1" max={maxTopSideLen} bind:value={topSideLen} name="uOsl">
+			<input type="number" min="1" max={maxTopSideLen} bind:value={topSideLen} name="upperOffset">
+		</label>
 	</fieldset>
 	<fieldset class="units">
 		<input type="radio" bind:group={units} value="in" id="units-in"><label for="units-in">in</label>
 		<input type="radio" bind:group={units} value="cm" id="units-cm"><label for="units-cm">cm</label>
 	</fieldset>
-	<a href="/{sides}/{height}/{baseSideLen}/{topSideLen}/{units}.pdf">Download PDF</a>
+	<a href="{sides}/{height}/{baseSideLen}/{topSideLen}/{units}.pdf">Download PDF</a>
 </aside>
 </article>
