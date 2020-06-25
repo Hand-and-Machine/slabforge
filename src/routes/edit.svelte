@@ -35,9 +35,11 @@
 	}
 </style>
 
-<!--suppress UnnecessaryLabelJS -->
 <script>
 	import Shape from '../lib/shape.js';
+	import SpinnerSliderControl from '../components/SpinnerSliderControl.svelte';
+	import ShapePreview3D from '../components/ShapePreview3D.svelte';
+
 	let sides = 4;
 	let height = 5;
 	let baseSideLen = 5;
@@ -49,10 +51,13 @@
 	$: {
 		// more fun trig times, which it took several tries to get right
 		const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
-		walls = new Shape(sides, height, baseSideLen, topSideLen, units).calcWalls();
 		const baseApothem = baseRadius * Math.cos(Math.PI / sides);
 		const topApothem = baseApothem + height;
 		maxTopSideLen = topApothem * 2 * Math.tan(Math.PI / sides);
+		if (topSideLen > maxTopSideLen) {
+			topSideLen = Math.floor(maxTopSideLen);
+		}
+		walls = new Shape(sides, height, baseSideLen, topSideLen, units).calcWalls();
 	}
 </script>
 
@@ -66,36 +71,13 @@
 		<path d={wall} fill="none" stroke="#000000"></path>
 	{/each}
 </svg>
+<ShapePreview3D shape={new Shape(sides, height, baseSideLen, topSideLen, units)}/>
 <aside>
 	<h2>Prism</h2>
-	<fieldset>
-		<label>
-			Sides
-			<input type="range" min="3" bind:value={sides} name="sidessl">
-			<input type="number" min="3" bind:value={sides} name="sides">
-		</label>
-	</fieldset>
-	<fieldset>
-		<label>
-			Height
-			<input type="range" min="1" bind:value={height} name="heightsl">
-			<input type="number" min="1" bind:value={height} name="height">
-		</label>
-	</fieldset>
-	<fieldset>
-		<label>
-			Bottom Side Length
-			<input type="range" min="1" bind:value={baseSideLen} name="lRsl">
-			<input type="number" min="1" bind:value={baseSideLen} name="lowerRadius">
-		</label>
-	</fieldset>
-	<fieldset>
-		<label>
-			Top Side Length
-			<input type="range" min="1" max={maxTopSideLen} bind:value={topSideLen} name="uOsl">
-			<input type="number" min="1" max={maxTopSideLen} bind:value={topSideLen} name="upperOffset">
-		</label>
-	</fieldset>
+	<SpinnerSliderControl bind:value={sides} min="3">Sides</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={height} min="1">Height</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={baseSideLen} min="1">Bottom Side Length</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={topSideLen} min="1" max={maxTopSideLen}>Top Side Length</SpinnerSliderControl>
 	<fieldset class="units">
 		<input type="radio" bind:group={units} value="in" id="units-in"><label for="units-in">in</label>
 		<input type="radio" bind:group={units} value="cm" id="units-cm"><label for="units-cm">cm</label>

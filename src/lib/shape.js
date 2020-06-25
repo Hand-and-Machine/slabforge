@@ -1,3 +1,5 @@
+import { Geometry, Vector3, Face3 } from 'three';
+
 export default class Shape {
     constructor(sides, height, baseSideLen, topSideLen, units) {
         this.sides = sides;
@@ -40,5 +42,38 @@ export default class Shape {
             result.push(wallD);
         }
         return result;
+    }
+
+    calc3DGeometry() {
+        let { sides, height, baseSideLen, topSideLen } = this;
+        const geometry = new Geometry();
+        const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
+        const topRadius = (topSideLen / 2) / Math.sin(Math.PI / sides);
+        geometry.vertices.push(new Vector3(0, 0, 0));
+        for (let k = 0; k < sides; k++) {
+            const theta = 2 * Math.PI * k / sides;
+            const baseX = Math.cos(theta) * baseRadius;
+            const baseZ = Math.sin(theta) * baseRadius;
+            const topX = Math.cos(theta) * topRadius;
+            const topZ = Math.sin(theta) * topRadius;
+            const nextTheta = 2 * Math.PI * (k + 1) / sides;
+            const nextBaseX = Math.cos(nextTheta) * baseRadius;
+            const nextBaseZ = Math.sin(nextTheta) * baseRadius;
+            const nextTopX = Math.cos(nextTheta) * topRadius;
+            const nextTopZ = Math.sin(nextTheta) * topRadius;
+            const firstV = geometry.vertices.length;
+            geometry.vertices.push(
+                new Vector3(baseX, 0, baseZ),
+                new Vector3(topX, height, topZ),
+                new Vector3(nextBaseX, 0, nextBaseZ),
+                new Vector3(nextTopX, height, nextTopZ)
+            );
+            geometry.faces.push(
+                new Face3(0, firstV, firstV + 2),
+                new Face3(firstV, firstV + 1, firstV + 2),
+                new Face3(firstV + 2, firstV + 1, firstV + 3)
+            );
+        }
+        return geometry;
     }
 }
