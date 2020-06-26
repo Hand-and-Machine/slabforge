@@ -44,6 +44,12 @@ export default class Shape {
         return result;
     }
 
+    calcPDFWidth() {
+        let { sides, height, baseSideLen, topSideLen } = this;
+        const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
+        return (baseRadius + height) * 3;
+    }
+
     calc3DGeometry() {
         let { sides, height, baseSideLen, topSideLen } = this;
         const geometry = new Geometry();

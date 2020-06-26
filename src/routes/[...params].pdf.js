@@ -17,16 +17,21 @@ export async function get(req, res, next) {
     const shape = new Shape(parseInt(sides), parseInt(height),
         parseInt(baseSideLen), parseInt(topSideLen), units);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"')
+    res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
+
+    const relPageSize = shape.calcPDFWidth();
+    console.log('Relative page size:', relPageSize);
 
     const scale = calcScale(shape.units);
-    const pageSize = scale * 100;
+    const pageSize = scale * relPageSize;
     const doc = new PDFDocument({
         size: [pageSize, pageSize],
         margin: 0,
     });
     doc.pipe(res);
-    doc.scale(scale).lineWidth((72 / 8) / scale);
+    doc.scale(scale)
+        .translate(-(100 - relPageSize) / 2, -(100 - relPageSize) / 2)
+        .lineWidth((72 / 8) / scale);
     for (let wall of shape.calcWalls()) {
         doc.path(wall).stroke();
     }
