@@ -1,6 +1,13 @@
+<style>
+    canvas {
+        flex: 1;
+    }
+</style>
+
 <script>
     import * as THREE from 'three';
     import { onMount } from 'svelte';
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
     export let shape;
 
     let canvas;
@@ -18,19 +25,35 @@
     onMount(() => {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas });
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+        const light = new THREE.PointLight(0xffffff, 0.5, 0, 2);
+        light.position.set(0, y * 3, 0);
+        scene.add(light);
 
-        camera.position.z = 10;
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+        const meshMaterial = new THREE.MeshStandardMaterial({
+            color: 0xE2725B,
+        });
+        const mesh = new THREE.Mesh(geometry, meshMaterial);
+        scene.add(mesh);
+
+        camera.position.setZ(10);
+
+        const controls = new OrbitControls( camera, renderer.domElement );
+        controls.target = new THREE.Vector3(0, y, 0);
 
         let frame;
 
         (function loop() {
             frame = requestAnimationFrame(loop);
-            camera.position.y = y;
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, true);
+            camera.aspect = canvas.width / canvas.height;
+            camera.updateProjectionMatrix();
+            controls.target.setY(y);
+            controls.update();
+            light.position.setY(y * 2.5);
             renderer.render( scene, camera );
         }());
 

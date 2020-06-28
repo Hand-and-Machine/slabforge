@@ -53,33 +53,50 @@ export default class Shape {
     calc3DGeometry() {
         let { sides, height, baseSideLen, topSideLen } = this;
         const geometry = new Geometry();
+
+        function makeVertex(x, y, z) {
+            const result = geometry.vertices.length;
+            geometry.vertices.push(new Vector3(x, y, z));
+            return result;
+        }
         const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
         const topRadius = (topSideLen / 2) / Math.sin(Math.PI / sides);
-        geometry.vertices.push(new Vector3(0, 0, 0));
+        const halfThickness = 0.1;
+        const outerBottomCenter = makeVertex(0, -halfThickness, 0);
+        const innerBottomCenter = makeVertex(0, halfThickness, 0);
+        const sideVertices = [];
         for (let k = 0; k < sides; k++) {
             const theta = 2 * Math.PI * k / sides;
-            const baseX = Math.cos(theta) * baseRadius;
-            const baseZ = Math.sin(theta) * baseRadius;
-            const topX = Math.cos(theta) * topRadius;
-            const topZ = Math.sin(theta) * topRadius;
-            const nextTheta = 2 * Math.PI * (k + 1) / sides;
-            const nextBaseX = Math.cos(nextTheta) * baseRadius;
-            const nextBaseZ = Math.sin(nextTheta) * baseRadius;
-            const nextTopX = Math.cos(nextTheta) * topRadius;
-            const nextTopZ = Math.sin(nextTheta) * topRadius;
-            const firstV = geometry.vertices.length;
-            geometry.vertices.push(
-                new Vector3(baseX, 0, baseZ),
-                new Vector3(topX, height, topZ),
-                new Vector3(nextBaseX, 0, nextBaseZ),
-                new Vector3(nextTopX, height, nextTopZ)
-            );
+            const outerBottomX = Math.cos(theta) * (baseRadius + halfThickness);
+            const outerBottomZ = Math.sin(theta) * (baseRadius + halfThickness);
+            const innerBottomX = Math.cos(theta) * (baseRadius - halfThickness);
+            const innerBottomZ = Math.sin(theta) * (baseRadius - halfThickness);
+            const outerTopX = Math.cos(theta) * (topRadius + halfThickness);
+            const outerTopZ = Math.sin(theta) * (topRadius + halfThickness);
+            const innerTopX = Math.cos(theta) * (topRadius - halfThickness);
+            const innerTopZ = Math.sin(theta) * (topRadius - halfThickness);
+            sideVertices.push({
+                outerBottom: makeVertex(outerBottomX, -halfThickness, outerBottomZ),
+                innerBottom: makeVertex(innerBottomX, halfThickness, innerBottomZ),
+                outerTop: makeVertex(outerTopX, height, outerTopZ),
+                innerTop: makeVertex(innerTopX, height, innerTopZ),
+            });
+        }
+        for (let k = 0; k < sides; k++) {
+            const thisSide = sideVertices[k];
+            const nextSide = sideVertices[(k + 1) % sides];
             geometry.faces.push(
-                new Face3(0, firstV, firstV + 2),
-                new Face3(firstV, firstV + 1, firstV + 2),
-                new Face3(firstV + 2, firstV + 1, firstV + 3)
+                new Face3(outerBottomCenter, thisSide.outerBottom, nextSide.outerBottom),
+                new Face3(thisSide.outerBottom, thisSide.outerTop, nextSide.outerBottom),
+                new Face3(nextSide.outerBottom, thisSide.outerTop, nextSide.outerTop),
+                new Face3(innerBottomCenter, nextSide.innerBottom, thisSide.innerBottom),
+                new Face3(thisSide.innerBottom, nextSide.innerBottom, thisSide.innerTop),
+                new Face3(nextSide.innerBottom, nextSide.innerTop, thisSide.innerTop),
+                new Face3(thisSide.outerTop, thisSide.innerTop, nextSide.outerTop),
+                new Face3(nextSide.outerTop, thisSide.innerTop, nextSide.innerTop),
             );
         }
+        geometry.computeFaceNormals();
         return geometry;
     }
 }
