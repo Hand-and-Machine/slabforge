@@ -15,14 +15,14 @@ export default class Shape {
         const result = [];
         for (let k = 0; k < sides; k++) {
             const theta = 2 * Math.PI * k / sides;
-            const x = 50 + Math.cos(theta) * baseRadius;
-            const y = 50 + Math.sin(theta) * baseRadius;
+            const x = Math.cos(theta) * baseRadius;
+            const y = Math.sin(theta) * baseRadius;
             let wallD = `M ${x},${y} `;
             // Hoooooooo boy, this sucks.
             // So first, we find the midpoint of this side:
             const nextTheta = 2 * Math.PI * (k + 1) / sides;
-            const nextX = 50 + Math.cos(nextTheta) * baseRadius;
-            const nextY = 50 + Math.sin(nextTheta) * baseRadius;
+            const nextX = Math.cos(nextTheta) * baseRadius;
+            const nextY = Math.sin(nextTheta) * baseRadius;
             const lowerMidX = (x + nextX) / 2;
             const lowerMidY = (y + nextY) / 2;
             // Then, we find the angle from the center to that midpoint:

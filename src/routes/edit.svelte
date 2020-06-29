@@ -6,14 +6,6 @@
 		margin: 0;
 	}
 
-	svg {
-		flex: 1;
-	}
-
-	path {
-		vector-effect: non-scaling-stroke;
-	}
-
 	aside {
 		flex: 0;
 	}
@@ -38,16 +30,17 @@
 <script>
 	import Shape from '../lib/shape.js';
 	import SpinnerSliderControl from '../components/SpinnerSliderControl.svelte';
+	import ShapePreview2D from '../components/ShapePreview2D.svelte';
 	import ShapePreview3D from '../components/ShapePreview3D.svelte';
 
 	let sides = 4;
 	let height = 5;
 	let baseSideLen = 5;
 	let topSideLen = 5;
-	let units = 'in';
+	let units = 'cm';
 
 	let maxTopSideLen;
-	let walls;
+	let shape;
 	$: {
 		// more fun trig times, which it took several tries to get right
 		const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
@@ -57,7 +50,7 @@
 		if (topSideLen > maxTopSideLen) {
 			topSideLen = Math.floor(maxTopSideLen);
 		}
-		walls = new Shape(sides, height, baseSideLen, topSideLen, units).calcWalls();
+		shape = new Shape(sides, height, baseSideLen, topSideLen, units);
 	}
 </script>
 
@@ -66,12 +59,8 @@
 </svelte:head>
 
 <article>
-<svg viewBox="0 0 100 100">
-	{#each walls as wall}
-		<path d={wall} fill="none" stroke="#000000"></path>
-	{/each}
-</svg>
-<ShapePreview3D shape={new Shape(sides, height, baseSideLen, topSideLen, units)}/>
+<ShapePreview2D shape={shape}/>
+<ShapePreview3D shape={shape}/>
 <aside>
 	<h2>Prism</h2>
 	<SpinnerSliderControl bind:value={sides} min="3">Sides</SpinnerSliderControl>

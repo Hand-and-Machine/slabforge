@@ -30,7 +30,7 @@ export async function get(req, res, next) {
     });
     doc.pipe(res);
     doc.scale(scale)
-        .translate(-(100 - relPageSize) / 2, -(100 - relPageSize) / 2)
+        .translate(relPageSize / 2, relPageSize / 2)
         .lineWidth((72 / 8) / scale);
     for (let wall of shape.calcWalls()) {
         doc.path(wall).stroke();
