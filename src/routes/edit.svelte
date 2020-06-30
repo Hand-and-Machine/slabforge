@@ -64,9 +64,9 @@
 <aside>
 	<h2>Prism</h2>
 	<SpinnerSliderControl bind:value={sides} min="3">Sides</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={height} min="1">Height</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={baseSideLen} min="1">Bottom Side Length</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={topSideLen} min="1" max={maxTopSideLen}>Top Side Length</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={height} min="1" step="0.1">Height</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={baseSideLen} min="1" step="0.1">Bottom Side Length</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={topSideLen} min="1" max={maxTopSideLen} step="0.1">Top Side Length</SpinnerSliderControl>
 	<fieldset class="units">
 		<input type="radio" bind:group={units} value="in" id="units-in"><label for="units-in">in</label>
 		<input type="radio" bind:group={units} value="cm" id="units-cm"><label for="units-cm">cm</label>
