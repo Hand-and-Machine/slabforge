@@ -27,6 +27,7 @@ jobs:
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         TARGET: ${{ secrets.REMOTE_TARGET }}
+        SOURCE: ''
 
     - name: Run SSH command
       uses: garygrossgarten/github-action-ssh@v0.5.0
