@@ -24,7 +24,7 @@ jobs:
       uses: garygrossgarten/github-action-scp@v0.6.0
       with:
         # Path to the local folder you want to copy.
-        local: ''
+        local: '.'
         # Path on the remote server to copy to.
         remote: ${{ secrets.REMOTE_TARGET }}
         # Hostname or IP address of the server.
