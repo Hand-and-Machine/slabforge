@@ -20,7 +20,6 @@ export async function get(req, res, next) {
     res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
 
     const relPageSize = shape.calcPDFWidth();
-    console.log('Relative page size:', relPageSize);
 
     const scale = calcScale(shape.units);
     const pageSize = scale * relPageSize;

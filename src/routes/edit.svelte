@@ -39,19 +39,8 @@
 	let topSideLen = 5;
 	let units = 'cm';
 
-	let maxTopSideLen;
 	let shape;
-	$: {
-		// more fun trig times, which it took several tries to get right
-		const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
-		const baseApothem = baseRadius * Math.cos(Math.PI / sides);
-		const topApothem = baseApothem + height;
-		maxTopSideLen = topApothem * 2 * Math.tan(Math.PI / sides);
-		if (topSideLen > maxTopSideLen) {
-			topSideLen = Math.floor(maxTopSideLen);
-		}
-		shape = new Shape(sides, height, baseSideLen, topSideLen, units);
-	}
+	$: shape = new Shape(sides, height, baseSideLen, topSideLen, units);
 </script>
 
 <svelte:head>
@@ -66,7 +55,7 @@
 	<SpinnerSliderControl bind:value={sides} min="3">Sides</SpinnerSliderControl>
 	<SpinnerSliderControl bind:value={height} min="1" step="0.1">Height</SpinnerSliderControl>
 	<SpinnerSliderControl bind:value={baseSideLen} min="1" step="0.1">Bottom Side Length</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={topSideLen} min="1" max={maxTopSideLen} step="0.1">Top Side Length</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={topSideLen} min="1" step="0.1">Top Side Length</SpinnerSliderControl>
 	<fieldset class="units">
 		<input type="radio" bind:group={units} value="in" id="units-in"><label for="units-in">in</label>
 		<input type="radio" bind:group={units} value="cm" id="units-cm"><label for="units-cm">cm</label>

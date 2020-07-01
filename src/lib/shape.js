@@ -12,6 +12,9 @@ export default class Shape {
     calcWalls() {
         let { sides, height, baseSideLen, topSideLen } = this;
         const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
+        const baseApothem = baseRadius * Math.cos(Math.PI / sides);
+        const topApothem = topSideLen / (2 * Math.tan(Math.PI / sides));
+        const wallLength = Math.sqrt(Math.pow(height, 2) + Math.pow(topApothem - baseApothem, 2));
         const result = [];
         for (let k = 0; k < sides; k++) {
             const theta = 2 * Math.PI * k / sides;
@@ -28,8 +31,8 @@ export default class Shape {
             // Then, we find the angle from the center to that midpoint:
             const midTheta = (theta + nextTheta) / 2;
             // Then, we extend along that angle from that midpoint at a distance of height:
-            const upperMidX = lowerMidX + Math.cos(midTheta) * height;
-            const upperMidY = lowerMidY + Math.sin(midTheta) * height;
+            const upperMidX = lowerMidX + Math.cos(midTheta) * wallLength;
+            const upperMidY = lowerMidY + Math.sin(midTheta) * wallLength;
             // Then, we go perpendicular to that angle, at a distance upperSideLength/2:
             const perpMidTheta = midTheta + Math.PI / 2;
             const upper1X = upperMidX - Math.cos(perpMidTheta) * topSideLen / 2;
@@ -47,7 +50,10 @@ export default class Shape {
     calcPDFWidth() {
         let { sides, height, baseSideLen, topSideLen } = this;
         const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
-        return (baseRadius + height) * 3;
+        const baseApothem = baseRadius * Math.cos(Math.PI / sides);
+        const topApothem = topSideLen / (2 * Math.tan(Math.PI / sides));
+        const wallLength = Math.sqrt(Math.pow(height, 2) + Math.pow(topApothem - baseApothem, 2));
+        return (baseRadius + wallLength) * 3;
     }
 
     calc3DGeometry() {
