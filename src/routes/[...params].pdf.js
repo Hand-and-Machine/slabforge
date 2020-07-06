@@ -28,6 +28,10 @@ export async function get(req, res, next) {
         margin: 0,
     });
     doc.pipe(res);
+    doc.text(`${sides} sides`, 10, 10)
+        .text(`height: ${height}${units}`)
+        .text(`bottom side length: ${baseSideLen}${units}`)
+        .text(`top side length: ${topSideLen}${units}`);
     doc.scale(scale)
         .translate(relPageSize / 2, relPageSize / 2)
         .lineWidth((72 / 8) / scale);
