@@ -28,4 +28,6 @@
 
 <h1>slabforge</h1>
 
-<p>it's for making slab ceramics</p>
+<p>it's for making slab ceramics.</p>
+
+<p>source is on <a href="https://github.com/Hand-and-Machine/slabforge">GitHub</a>.</p>
