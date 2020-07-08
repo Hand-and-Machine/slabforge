@@ -17,7 +17,7 @@ export async function get(req, res, next) {
     const shape = new Shape(parseInt(sides), parseInt(height),
         parseInt(baseSideLen), parseInt(topSideLen), units);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
+    // res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
 
     const relPageSize = shape.calcPDFWidth();
 

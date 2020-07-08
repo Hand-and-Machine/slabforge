@@ -6,6 +6,10 @@
 		margin: 0;
 	}
 
+	object {
+		flex: 1;
+	}
+
 	aside {
 		flex: 0;
 	}
@@ -48,7 +52,10 @@
 </svelte:head>
 
 <article>
-<ShapePreview2D shape={shape}/>
+<object data="{sides}/{height}/{baseSideLen}/{topSideLen}/{units}.pdf"
+		type='application/pdf'>
+	<ShapePreview2D shape={shape}/>
+</object>
 <ShapePreview3D shape={shape}/>
 <aside>
 	<h2>Prism</h2>
