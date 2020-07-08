@@ -20,7 +20,6 @@ export default class Shape {
             const theta = 2 * Math.PI * k / sides;
             const x = Math.cos(theta) * baseRadius;
             const y = Math.sin(theta) * baseRadius;
-            let wallD = `M ${x},${y} `;
             // Hoooooooo boy, this sucks.
             // So first, we find the midpoint of this side:
             const nextTheta = 2 * Math.PI * (k + 1) / sides;
@@ -41,7 +40,7 @@ export default class Shape {
             const upper2X = upperMidX + Math.cos(perpMidTheta) * topSideLen / 2;
             const upper2Y = upperMidY + Math.sin(perpMidTheta) * topSideLen / 2;
             // Then, at long last, we glue it all together:
-            wallD += `L ${upper1X},${upper1Y} ${upper2X},${upper2Y} ${nextX},${nextY} z`;
+            let wallD = `M ${x},${y} L ${upper1X},${upper1Y} ${upper2X},${upper2Y} ${nextX},${nextY} z`;
             result.push(wallD);
         }
         return result;
