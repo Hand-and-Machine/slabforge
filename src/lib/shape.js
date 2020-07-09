@@ -1,30 +1,45 @@
 import { Geometry, Vector3, Face3 } from 'three';
 
-export default class Shape {
-    constructor(sides, height, baseSideLen, topSideLen, units) {
+class Prism {
+    constructor(sides, height, bottomWidth, topWidth, units) {
         this.sides = sides;
         this.height = height;
-        this.baseSideLen = baseSideLen;
-        this.topSideLen = topSideLen;
+        this.bottomWidth = bottomWidth;
+        this.topWidth = topWidth;
         this.units = units;
     }
 
+    doMath() {
+        const { sides, height, bottomWidth, topWidth } = this;
+        const bottomRadius = bottomWidth / 2;
+        const bottomSideLen = bottomRadius * Math.sin(Math.PI / sides) * 2;
+        const bottomApothem = bottomRadius * Math.cos(Math.PI / sides);
+        const topRadius = topWidth / 2;
+        const topSideLen = topRadius * Math.sin(Math.PI / sides) * 2;
+        const topApothem = topRadius * Math.cos(Math.PI / sides);
+        const wallLength = Math.sqrt(Math.pow(height, 2) + Math.pow(topApothem - bottomApothem, 2));
+        return {
+            bottomRadius,
+            bottomSideLen,
+            topRadius,
+            topSideLen,
+            wallLength,
+        }
+    }
+
     calcWalls() {
-        let { sides, height, baseSideLen, topSideLen } = this;
-        const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
-        const baseApothem = baseRadius * Math.cos(Math.PI / sides);
-        const topApothem = topSideLen / (2 * Math.tan(Math.PI / sides));
-        const wallLength = Math.sqrt(Math.pow(height, 2) + Math.pow(topApothem - baseApothem, 2));
+        const { sides } = this;
+        const { bottomRadius, topSideLen, wallLength } = this.doMath();
         const result = [];
         for (let k = 0; k < sides; k++) {
             const theta = 2 * Math.PI * k / sides;
-            const x = Math.cos(theta) * baseRadius;
-            const y = Math.sin(theta) * baseRadius;
+            const x = Math.cos(theta) * bottomRadius;
+            const y = Math.sin(theta) * bottomRadius;
             // Hoooooooo boy, this sucks.
             // So first, we find the midpoint of this side:
             const nextTheta = 2 * Math.PI * (k + 1) / sides;
-            const nextX = Math.cos(nextTheta) * baseRadius;
-            const nextY = Math.sin(nextTheta) * baseRadius;
+            const nextX = Math.cos(nextTheta) * bottomRadius;
+            const nextY = Math.sin(nextTheta) * bottomRadius;
             const lowerMidX = (x + nextX) / 2;
             const lowerMidY = (y + nextY) / 2;
             // Then, we find the angle from the center to that midpoint:
@@ -47,16 +62,23 @@ export default class Shape {
     }
 
     calcPDFWidth() {
-        let { sides, height, baseSideLen, topSideLen } = this;
-        const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
-        const baseApothem = baseRadius * Math.cos(Math.PI / sides);
-        const topApothem = topSideLen / (2 * Math.tan(Math.PI / sides));
-        const wallLength = Math.sqrt(Math.pow(height, 2) + Math.pow(topApothem - baseApothem, 2));
-        return (baseRadius + wallLength) * 3;
+        const walls = this.calcWalls();
+        const points = [];
+        for (const wall of walls) {
+            for (const point of wall.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)) {
+                points.push([parseFloat(point[1]), parseFloat(point[2])]);
+            }
+        }
+        let highestCoordinate = 0;
+        for (const point of points) {
+            highestCoordinate = Math.max(highestCoordinate, ...point);
+        }
+        return highestCoordinate * 2 + 2;
     }
 
     calc3DGeometry() {
-        let { sides, height, baseSideLen, topSideLen } = this;
+        let { sides, height } = this;
+        const { bottomRadius, topRadius } = this.doMath();
         const geometry = new Geometry();
 
         function makeVertex(x, y, z) {
@@ -64,18 +86,16 @@ export default class Shape {
             geometry.vertices.push(new Vector3(x, y, z));
             return result;
         }
-        const baseRadius = (baseSideLen / 2) / Math.sin(Math.PI / sides);
-        const topRadius = (topSideLen / 2) / Math.sin(Math.PI / sides);
         const halfThickness = 0.1;
         const outerBottomCenter = makeVertex(0, -halfThickness, 0);
         const innerBottomCenter = makeVertex(0, halfThickness, 0);
         const sideVertices = [];
         for (let k = 0; k < sides; k++) {
             const theta = 2 * Math.PI * k / sides;
-            const outerBottomX = Math.cos(theta) * (baseRadius + halfThickness);
-            const outerBottomZ = Math.sin(theta) * (baseRadius + halfThickness);
-            const innerBottomX = Math.cos(theta) * (baseRadius - halfThickness);
-            const innerBottomZ = Math.sin(theta) * (baseRadius - halfThickness);
+            const outerBottomX = Math.cos(theta) * (bottomRadius + halfThickness);
+            const outerBottomZ = Math.sin(theta) * (bottomRadius + halfThickness);
+            const innerBottomX = Math.cos(theta) * (bottomRadius - halfThickness);
+            const innerBottomZ = Math.sin(theta) * (bottomRadius - halfThickness);
             const outerTopX = Math.cos(theta) * (topRadius + halfThickness);
             const outerTopZ = Math.sin(theta) * (topRadius + halfThickness);
             const innerTopX = Math.cos(theta) * (topRadius - halfThickness);
@@ -103,5 +123,155 @@ export default class Shape {
         }
         geometry.computeFaceNormals();
         return geometry;
+    }
+}
+
+class Conic {
+    constructor(height, bottomWidth, topWidth, units) {
+        this.height = height;
+        this.bottomWidth = bottomWidth;
+        this.topWidth = topWidth;
+        this.units = units;
+    }
+
+    doMath() {
+        const { height, bottomWidth, topWidth } = this;
+        const bottomRadius = bottomWidth / 2;
+        const topRadius = topWidth / 2;
+        const wallLength = Math.sqrt(Math.pow(height, 2) + Math.pow(topRadius - bottomRadius, 2));
+        return {
+            bottomRadius,
+            topRadius,
+            wallLength,
+        }
+    }
+
+    calcWalls() {
+        const { bottomWidth } = this;
+        const { bottomRadius, topRadius, wallLength } = this.doMath();
+        const result = [];
+        // Bottom is easy.
+        result.push(`M 0,0 A ${bottomRadius} ${bottomRadius} 0 1 0 0,${bottomWidth} ${bottomRadius} ${bottomRadius} 0 1 0 0,0`);
+        // Wall when the radii match is easy.
+        if (bottomRadius === topRadius) {
+            const circumference = 2 * Math.PI * bottomRadius;
+            result.push(`M -${circumference / 2},-1 h ${circumference} v -${wallLength} h -${circumference} z`);
+        } else {
+            // Wall when the radii do not match is... let's go with "nontrivial".
+            // We know we need the arclength of one edge of the wall to be the bottom circumference
+            const bottomCircumference = 2 * Math.PI * bottomRadius;
+            // We know we need the arclength of the other edge of the wall to be the top circumference
+            const topCircumference = 2 * Math.PI * topRadius;
+            // Just for this, let's use a min and a max
+            const minCircumference = Math.min(bottomCircumference, topCircumference);
+            const maxCircumference = Math.max(bottomCircumference, topCircumference);
+            // Oh hey we have to do algebra and geometry at the same time!
+            // We have θ, the angle of the annulus sector (unknown),
+            // and r, the inner radius (unknown).
+            // We know r', the distance between the inner and outer radii (wallLength),
+            // and our circumferences are minC = r * θ/(2π) and maxC = (r+r') * θ/(2π).
+            // Two equations, two unknowns. Algebra time!
+            // maxC = r * θ/(2π) + r' * θ/(2π)
+            // maxC = minC + r' * θ/(2π)
+            // maxC - minC = r' * θ/(2π)
+            // 2π * (maxC-minC) = r' * θ
+            // 2π * (maxC-minC) / r' = θ
+            const theta = 2 * Math.PI * (maxCircumference - minCircumference) / wallLength;
+            // minC = r * θ/(2π)
+            // minC * 2π / θ = r
+            const innerRadius = minCircumference * 2 * Math.PI / theta;
+            // now we have all the ingredients. time to glue em together
+            const outerRadius = innerRadius + wallLength;
+            const p1x = innerRadius * Math.cos(Math.PI / 2 + theta / 2);
+            const p1y = innerRadius * Math.sin(Math.PI / 2 + theta / 2);
+            const p2x = innerRadius * Math.cos(Math.PI / 2 - theta / 2);
+            const p2y = innerRadius * Math.sin(Math.PI / 2 - theta / 2);
+            const p3x = outerRadius * Math.cos(Math.PI / 2 - theta / 2);
+            const p3y = outerRadius * Math.sin(Math.PI / 2 - theta / 2);
+            const p4x = outerRadius * Math.cos(Math.PI / 2 + theta / 2);
+            const p4y = outerRadius * Math.sin(Math.PI / 2 + theta / 2);
+
+            // we have our coordinates, now it is time to cook
+            const wallD = `M ${p1x},${p1y}`
+                + `A ${innerRadius} ${innerRadius} 0 0 1 ${p2x},${p2y}`
+                + `L ${p3x},${p3y}`
+                + `A ${outerRadius} ${outerRadius} 0 0 0 ${p4x},${p4y}`
+                + `z`;
+            result.push(wallD);
+        }
+        return result;
+    }
+
+    calcPDFWidth() {
+        const walls = this.calcWalls();
+        const points = [];
+        for (const wall of walls) {
+            for (const point of wall.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)) {
+                points.push([parseFloat(point[1]), parseFloat(point[2])]);
+            }
+        }
+        let highestCoordinate = 0;
+        for (const point of points) {
+            highestCoordinate = Math.max(highestCoordinate, ...point);
+        }
+        return highestCoordinate * 2 + 2;
+    }
+
+    calc3DGeometry() {
+        let { height } = this;
+        const { bottomRadius, topRadius } = this.doMath();
+        const geometry = new Geometry();
+
+        function makeVertex(x, y, z) {
+            const result = geometry.vertices.length;
+            geometry.vertices.push(new Vector3(x, y, z));
+            return result;
+        }
+        const halfThickness = 0.1;
+        const outerBottomCenter = makeVertex(0, -halfThickness, 0);
+        const innerBottomCenter = makeVertex(0, halfThickness, 0);
+        const sideVertices = [];
+        const RESOLUTION = 100;
+        for (let k = 0; k < RESOLUTION; k++) {
+            const theta = 2 * Math.PI * k / RESOLUTION;
+            const outerBottomX = Math.cos(theta) * (bottomRadius + halfThickness);
+            const outerBottomZ = Math.sin(theta) * (bottomRadius + halfThickness);
+            const innerBottomX = Math.cos(theta) * (bottomRadius - halfThickness);
+            const innerBottomZ = Math.sin(theta) * (bottomRadius - halfThickness);
+            const outerTopX = Math.cos(theta) * (topRadius + halfThickness);
+            const outerTopZ = Math.sin(theta) * (topRadius + halfThickness);
+            const innerTopX = Math.cos(theta) * (topRadius - halfThickness);
+            const innerTopZ = Math.sin(theta) * (topRadius - halfThickness);
+            sideVertices.push({
+                outerBottom: makeVertex(outerBottomX, -halfThickness, outerBottomZ),
+                innerBottom: makeVertex(innerBottomX, halfThickness, innerBottomZ),
+                outerTop: makeVertex(outerTopX, height, outerTopZ),
+                innerTop: makeVertex(innerTopX, height, innerTopZ),
+            });
+        }
+        for (let k = 0; k < RESOLUTION; k++) {
+            const thisSide = sideVertices[k];
+            const nextSide = sideVertices[(k + 1) % RESOLUTION];
+            geometry.faces.push(
+                new Face3(outerBottomCenter, thisSide.outerBottom, nextSide.outerBottom),
+                new Face3(thisSide.outerBottom, thisSide.outerTop, nextSide.outerBottom),
+                new Face3(nextSide.outerBottom, thisSide.outerTop, nextSide.outerTop),
+                new Face3(innerBottomCenter, nextSide.innerBottom, thisSide.innerBottom),
+                new Face3(thisSide.innerBottom, nextSide.innerBottom, thisSide.innerTop),
+                new Face3(nextSide.innerBottom, nextSide.innerTop, thisSide.innerTop),
+                new Face3(thisSide.outerTop, thisSide.innerTop, nextSide.outerTop),
+                new Face3(nextSide.outerTop, thisSide.innerTop, nextSide.innerTop),
+            );
+        }
+        geometry.computeFaceNormals();
+        return geometry;
+    }
+}
+
+export default function makeShape(sides, height, bottomWidth, topWidth, units) {
+    if (sides === '∞') {
+        return new Conic(height, bottomWidth, topWidth, units);
+    } else {
+        return new Prism(sides, height, bottomWidth, topWidth, units);
     }
 }

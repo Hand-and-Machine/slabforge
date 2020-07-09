@@ -13,38 +13,23 @@
 	aside {
 		flex: 0;
 	}
-
-	.units {
-		display: flex;
-		flex-flow: row;
-	}
-	.units input[type=radio] {
-		display: none;
-	}
-	.units input[type=radio] + label {
-		background-color: #DDDDDD;
-		flex: 1;
-		text-align: center;
-	}
-	.units input[type=radio]:checked + label {
-		background-color: #ba75c7;
-	}
 </style>
 
 <script>
-	import Shape from '../lib/shape.js';
+	import makeShape from '../lib/shape.js';
 	import SpinnerSliderControl from '../components/SpinnerSliderControl.svelte';
 	import ShapePreview2D from '../components/ShapePreview2D.svelte';
 	import ShapePreview3D from '../components/ShapePreview3D.svelte';
+	import RadioSelector from '../components/RadioSelector.svelte';
 
 	let sides = 4;
 	let height = 5;
-	let baseSideLen = 5;
-	let topSideLen = 5;
+	let bottomWidth = 5;
+	let topWidth = 5;
 	let units = 'cm';
 
 	let shape;
-	$: shape = new Shape(sides, height, baseSideLen, topSideLen, units);
+	$: shape = makeShape(sides, height, bottomWidth, topWidth, units);
 </script>
 
 <svelte:head>
@@ -52,21 +37,19 @@
 </svelte:head>
 
 <article>
-<object data="{sides}/{height}/{baseSideLen}/{topSideLen}/{units}.pdf"
+<object data="{sides}/{height}/{bottomWidth}/{topWidth}/{units}.pdf"
+		title="template preview"
 		type='application/pdf'>
 	<ShapePreview2D shape={shape}/>
 </object>
 <ShapePreview3D shape={shape}/>
 <aside>
-	<h2>Prism</h2>
+	<RadioSelector bind:value={sides} options={[[3, '3 sides'], [4, '4 sides'], [6, '6 sides'], [8, '8 sides'], [10, '10 sides'], ['∞', 'circle']]}/>
 	<SpinnerSliderControl bind:value={sides} min="3">Sides</SpinnerSliderControl>
 	<SpinnerSliderControl bind:value={height} min="1" step="0.1">Height</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={baseSideLen} min="1" step="0.1">Bottom Side Length</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={topSideLen} min="1" step="0.1">Top Side Length</SpinnerSliderControl>
-	<fieldset class="units">
-		<input type="radio" bind:group={units} value="in" id="units-in"><label for="units-in">in</label>
-		<input type="radio" bind:group={units} value="cm" id="units-cm"><label for="units-cm">cm</label>
-	</fieldset>
-	<a href="{sides}/{height}/{baseSideLen}/{topSideLen}/{units}.pdf">Download PDF</a>
+	<SpinnerSliderControl bind:value={bottomWidth} min="1" step="0.1">Bottom Width</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={topWidth} min="1" step="0.1">Top Width</SpinnerSliderControl>
+	<RadioSelector bind:value={units} options={['in', 'cm']}/>
+	<a href="{sides}/{height}/{bottomWidth}/{topWidth}/{units}.pdf">Download PDF</a>
 </aside>
 </article>

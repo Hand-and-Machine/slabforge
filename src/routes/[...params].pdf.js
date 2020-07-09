@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit';
-import Shape from '../lib/shape.js';
+import makeShape from '../lib/shape.js';
 
 function calcScale(units) {
     if (units === 'in') {
@@ -14,8 +14,7 @@ function calcScale(units) {
 export async function get(req, res, next) {
     const { params } = req.params;
     const [ sides, height, baseSideLen, topSideLen, units ] = params;
-    const shape = new Shape(parseInt(sides), parseInt(height),
-        parseInt(baseSideLen), parseInt(topSideLen), units);
+    const shape = makeShape(sides, height, baseSideLen, topSideLen, units);
     res.setHeader('Content-Type', 'application/pdf');
     // res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
 
@@ -28,8 +27,12 @@ export async function get(req, res, next) {
         margin: 0,
     });
     doc.pipe(res);
-    doc.text(`${sides} sides`, 10, 10)
-        .text(`height: ${height}${units}`)
+    if (sides === '∞') {
+        doc.text("circle", 10, 10);
+    } else {
+        doc.text(`${sides} sides`, 10, 10);
+    }
+    doc.text(`height: ${height}${units}`)
         .text(`bottom side length: ${baseSideLen}${units}`)
         .text(`top side length: ${topSideLen}${units}`);
     doc.scale(scale)
