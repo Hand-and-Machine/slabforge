@@ -146,6 +146,40 @@ class Conic {
         }
     }
 
+    doAnnulusSectorMath() {
+        const { bottomRadius, topRadius, wallLength } = this.doMath();
+        // This is... let's go with "nontrivial".
+        // We know we need the arclength of one edge of the wall to be the bottom circumference
+        const bottomCircumference = 2 * Math.PI * bottomRadius;
+        // We know we need the arclength of the other edge of the wall to be the top circumference
+        const topCircumference = 2 * Math.PI * topRadius;
+        // Just for this, let's use a min and a max
+        const minCircumference = Math.min(bottomCircumference, topCircumference);
+        const maxCircumference = Math.max(bottomCircumference, topCircumference);
+        // Oh hey we have to do algebra and geometry at the same time!
+        // We have θ, the angle of the annulus sector (unknown),
+        // and r, the inner radius (unknown).
+        // We know r', the distance between the inner and outer radii (wallLength),
+        // and our circumferences are minC = r * θ and maxC = (r+r') * θ.
+        // Two equations, two unknowns. Algebra time!
+        // maxC = r * θ + r' * θ
+        // maxC = minC + r' * θ
+        // maxC - minC = r' * θ
+        // (maxC-minC) / r' = θ
+        const theta = (maxCircumference - minCircumference) / wallLength;
+        // minC = r * θ
+        // minC / θ = r
+        const innerRadius = minCircumference / theta;
+        // now we have all the ingredients. time to glue em together
+        const outerRadius = innerRadius + wallLength;
+
+        return {
+            theta,
+            innerRadius,
+            outerRadius,
+        }
+    }
+
     calcWalls() {
         const { bottomWidth } = this;
         const { bottomRadius, topRadius, wallLength } = this.doMath();
@@ -157,45 +191,23 @@ class Conic {
             const circumference = 2 * Math.PI * bottomRadius;
             result.push(`M -${circumference / 2},-1 h ${circumference} v -${wallLength} h -${circumference} z`);
         } else {
-            // Wall when the radii do not match is... let's go with "nontrivial".
-            // We know we need the arclength of one edge of the wall to be the bottom circumference
-            const bottomCircumference = 2 * Math.PI * bottomRadius;
-            // We know we need the arclength of the other edge of the wall to be the top circumference
-            const topCircumference = 2 * Math.PI * topRadius;
-            // Just for this, let's use a min and a max
-            const minCircumference = Math.min(bottomCircumference, topCircumference);
-            const maxCircumference = Math.max(bottomCircumference, topCircumference);
-            // Oh hey we have to do algebra and geometry at the same time!
-            // We have θ, the angle of the annulus sector (unknown),
-            // and r, the inner radius (unknown).
-            // We know r', the distance between the inner and outer radii (wallLength),
-            // and our circumferences are minC = r * θ/(2π) and maxC = (r+r') * θ/(2π).
-            // Two equations, two unknowns. Algebra time!
-            // maxC = r * θ/(2π) + r' * θ/(2π)
-            // maxC = minC + r' * θ/(2π)
-            // maxC - minC = r' * θ/(2π)
-            // 2π * (maxC-minC) = r' * θ
-            // 2π * (maxC-minC) / r' = θ
-            const theta = 2 * Math.PI * (maxCircumference - minCircumference) / wallLength;
-            // minC = r * θ/(2π)
-            // minC * 2π / θ = r
-            const innerRadius = minCircumference * 2 * Math.PI / theta;
-            // now we have all the ingredients. time to glue em together
-            const outerRadius = innerRadius + wallLength;
-            const p1x = innerRadius * Math.cos(Math.PI / 2 + theta / 2);
-            const p1y = innerRadius * Math.sin(Math.PI / 2 + theta / 2);
-            const p2x = innerRadius * Math.cos(Math.PI / 2 - theta / 2);
-            const p2y = innerRadius * Math.sin(Math.PI / 2 - theta / 2);
-            const p3x = outerRadius * Math.cos(Math.PI / 2 - theta / 2);
-            const p3y = outerRadius * Math.sin(Math.PI / 2 - theta / 2);
-            const p4x = outerRadius * Math.cos(Math.PI / 2 + theta / 2);
-            const p4y = outerRadius * Math.sin(Math.PI / 2 + theta / 2);
+            // Wall when the radii do not match is a nuisance.
+            const { theta, innerRadius, outerRadius } = this.doAnnulusSectorMath();
+            console.log(this, this.doMath(), this.doAnnulusSectorMath());
+            const p1x = innerRadius * Math.cos(-Math.PI / 2 + theta / 2);
+            const p1y = innerRadius * Math.sin(-Math.PI / 2 + theta / 2);
+            const p2x = innerRadius * Math.cos(-Math.PI / 2 - theta / 2);
+            const p2y = innerRadius * Math.sin(-Math.PI / 2 - theta / 2);
+            const p3x = outerRadius * Math.cos(-Math.PI / 2 - theta / 2);
+            const p3y = outerRadius * Math.sin(-Math.PI / 2 - theta / 2);
+            const p4x = outerRadius * Math.cos(-Math.PI / 2 + theta / 2);
+            const p4y = outerRadius * Math.sin(-Math.PI / 2 + theta / 2);
 
             // we have our coordinates, now it is time to cook
             const wallD = `M ${p1x},${p1y}`
-                + `A ${innerRadius} ${innerRadius} 0 0 1 ${p2x},${p2y}`
+                + `A ${innerRadius} ${innerRadius} 0 0 0 ${p2x},${p2y}`
                 + `L ${p3x},${p3y}`
-                + `A ${outerRadius} ${outerRadius} 0 0 0 ${p4x},${p4y}`
+                + `A ${outerRadius} ${outerRadius} 0 0 1 ${p4x},${p4y}`
                 + `z`;
             result.push(wallD);
         }
@@ -203,68 +215,24 @@ class Conic {
     }
 
     calcPDFWidth() {
-        const walls = this.calcWalls();
-        const points = [];
-        for (const wall of walls) {
-            for (const point of wall.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)) {
-                points.push([parseFloat(point[1]), parseFloat(point[2])]);
-            }
+        const { bottomWidth } = this;
+        const { bottomRadius, topRadius, wallLength } = this.doMath();
+        const coordinates = [bottomWidth];
+        if (bottomRadius === topRadius) {
+            const circumference = 2 * Math.PI * bottomRadius;
+            coordinates.push(circumference / 2, wallLength);
+        } else {
+            const { outerRadius } = this.doAnnulusSectorMath();
+            coordinates.push(outerRadius);
         }
-        let highestCoordinate = 0;
-        for (const point of points) {
-            highestCoordinate = Math.max(highestCoordinate, ...point);
-        }
+        const highestCoordinate = Math.max(...coordinates);
         return highestCoordinate * 2 + 2;
     }
 
     calc3DGeometry() {
-        let { height } = this;
-        const { bottomRadius, topRadius } = this.doMath();
-        const geometry = new Geometry();
-
-        function makeVertex(x, y, z) {
-            const result = geometry.vertices.length;
-            geometry.vertices.push(new Vector3(x, y, z));
-            return result;
-        }
-        const halfThickness = 0.1;
-        const outerBottomCenter = makeVertex(0, -halfThickness, 0);
-        const innerBottomCenter = makeVertex(0, halfThickness, 0);
-        const sideVertices = [];
+        const { height, bottomWidth, topWidth, units } = this;
         const RESOLUTION = 100;
-        for (let k = 0; k < RESOLUTION; k++) {
-            const theta = 2 * Math.PI * k / RESOLUTION;
-            const outerBottomX = Math.cos(theta) * (bottomRadius + halfThickness);
-            const outerBottomZ = Math.sin(theta) * (bottomRadius + halfThickness);
-            const innerBottomX = Math.cos(theta) * (bottomRadius - halfThickness);
-            const innerBottomZ = Math.sin(theta) * (bottomRadius - halfThickness);
-            const outerTopX = Math.cos(theta) * (topRadius + halfThickness);
-            const outerTopZ = Math.sin(theta) * (topRadius + halfThickness);
-            const innerTopX = Math.cos(theta) * (topRadius - halfThickness);
-            const innerTopZ = Math.sin(theta) * (topRadius - halfThickness);
-            sideVertices.push({
-                outerBottom: makeVertex(outerBottomX, -halfThickness, outerBottomZ),
-                innerBottom: makeVertex(innerBottomX, halfThickness, innerBottomZ),
-                outerTop: makeVertex(outerTopX, height, outerTopZ),
-                innerTop: makeVertex(innerTopX, height, innerTopZ),
-            });
-        }
-        for (let k = 0; k < RESOLUTION; k++) {
-            const thisSide = sideVertices[k];
-            const nextSide = sideVertices[(k + 1) % RESOLUTION];
-            geometry.faces.push(
-                new Face3(outerBottomCenter, thisSide.outerBottom, nextSide.outerBottom),
-                new Face3(thisSide.outerBottom, thisSide.outerTop, nextSide.outerBottom),
-                new Face3(nextSide.outerBottom, thisSide.outerTop, nextSide.outerTop),
-                new Face3(innerBottomCenter, nextSide.innerBottom, thisSide.innerBottom),
-                new Face3(thisSide.innerBottom, nextSide.innerBottom, thisSide.innerTop),
-                new Face3(nextSide.innerBottom, nextSide.innerTop, thisSide.innerTop),
-                new Face3(thisSide.outerTop, thisSide.innerTop, nextSide.outerTop),
-                new Face3(nextSide.outerTop, thisSide.innerTop, nextSide.innerTop),
-            );
-        }
-        geometry.computeFaceNormals();
-        return geometry;
+        return new Prism(RESOLUTION, height, bottomWidth, topWidth, units).calc3DGeometry();
     }
 }
 
