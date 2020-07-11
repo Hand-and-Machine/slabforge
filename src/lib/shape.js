@@ -172,11 +172,30 @@ class Conic {
         const innerRadius = minCircumference / theta;
         // now we have all the ingredients. time to glue em together
         const outerRadius = innerRadius + wallLength;
+        const p1x = innerRadius * Math.cos(-Math.PI / 2 + theta / 2);
+        let p1y = innerRadius * Math.sin(-Math.PI / 2 + theta / 2);
+        const p2x = innerRadius * Math.cos(-Math.PI / 2 - theta / 2);
+        let p2y = innerRadius * Math.sin(-Math.PI / 2 - theta / 2);
+        const p3x = outerRadius * Math.cos(-Math.PI / 2 - theta / 2);
+        let p3y = outerRadius * Math.sin(-Math.PI / 2 - theta / 2);
+        const p4x = outerRadius * Math.cos(-Math.PI / 2 + theta / 2);
+        let p4y = outerRadius * Math.sin(-Math.PI / 2 + theta / 2);
+        // but wait there's more. compactness is a virtue, let's preserve that.
+        // if we find the edges of the bounding box, we can bring our sector closer to the origin
+        // without screwing anything up.
+        const bbBottom = Math.min(p1y, p2y, p3y, p4y);
+        const bbTop = -outerRadius;
+        p1y -= (bbBottom + this.bottomWidth);
+        p2y -= (bbBottom + this.bottomWidth);
+        p3y -= (bbBottom + this.bottomWidth);
+        p4y -= (bbBottom + this.bottomWidth);
 
         return {
             theta,
             innerRadius,
             outerRadius,
+            p: [{x: p1x, y: p1y}, {x: p2x, y: p2y}, {x: p3x, y: p3y}, {x: p4x, y: p4y}],
+            bbTop: bbTop - (bbBottom + this.bottomWidth),
         }
     }
 
@@ -192,22 +211,12 @@ class Conic {
             result.push(`M -${circumference / 2},-1 h ${circumference} v -${wallLength} h -${circumference} z`);
         } else {
             // Wall when the radii do not match is a nuisance.
-            const { theta, innerRadius, outerRadius } = this.doAnnulusSectorMath();
-            console.log(this, this.doMath(), this.doAnnulusSectorMath());
-            const p1x = innerRadius * Math.cos(-Math.PI / 2 + theta / 2);
-            const p1y = innerRadius * Math.sin(-Math.PI / 2 + theta / 2);
-            const p2x = innerRadius * Math.cos(-Math.PI / 2 - theta / 2);
-            const p2y = innerRadius * Math.sin(-Math.PI / 2 - theta / 2);
-            const p3x = outerRadius * Math.cos(-Math.PI / 2 - theta / 2);
-            const p3y = outerRadius * Math.sin(-Math.PI / 2 - theta / 2);
-            const p4x = outerRadius * Math.cos(-Math.PI / 2 + theta / 2);
-            const p4y = outerRadius * Math.sin(-Math.PI / 2 + theta / 2);
-
-            // we have our coordinates, now it is time to cook
-            const wallD = `M ${p1x},${p1y}`
-                + `A ${innerRadius} ${innerRadius} 0 0 0 ${p2x},${p2y}`
-                + `L ${p3x},${p3y}`
-                + `A ${outerRadius} ${outerRadius} 0 0 1 ${p4x},${p4y}`
+            const { theta, innerRadius, outerRadius, p } = this.doAnnulusSectorMath();
+            const bigArc = theta > Math.PI ? 1 : 0;
+            const wallD = `M ${p[0].x},${p[0].y}`
+                + `A ${innerRadius} ${innerRadius} 0 ${bigArc} 0 ${p[1].x},${p[1].y}`
+                + `L ${p[2].x},${p[2].y}`
+                + `A ${outerRadius} ${outerRadius} 0 ${bigArc} 1 ${p[3].x},${p[3].y}`
                 + `z`;
             result.push(wallD);
         }
@@ -222,8 +231,10 @@ class Conic {
             const circumference = 2 * Math.PI * bottomRadius;
             coordinates.push(circumference / 2, wallLength);
         } else {
-            const { outerRadius } = this.doAnnulusSectorMath();
-            coordinates.push(outerRadius);
+            const { p, bbTop } = this.doAnnulusSectorMath();
+            const xs = p.map(a => Math.abs(a.x));
+            const ys = p.map(a => Math.abs(a.y));
+            coordinates.push(...xs, ...ys, Math.abs(bbTop));
         }
         const highestCoordinate = Math.max(...coordinates);
         return highestCoordinate * 2 + 2;
@@ -238,8 +249,8 @@ class Conic {
 
 export default function makeShape(sides, height, bottomWidth, topWidth, units) {
     if (sides === '∞') {
-        return new Conic(height, bottomWidth, topWidth, units);
+        return new Conic(parseFloat(height), parseFloat(bottomWidth), parseFloat(topWidth), units);
     } else {
-        return new Prism(sides, height, bottomWidth, topWidth, units);
+        return new Prism(parseInt(sides), parseFloat(height), parseFloat(bottomWidth), parseFloat(topWidth), units);
     }
 }
