@@ -183,19 +183,19 @@ class Conic {
         // but wait there's more. compactness is a virtue, let's preserve that.
         // if we find the edges of the bounding box, we can bring our sector closer to the origin
         // without screwing anything up.
-        const bbBottom = Math.min(p1y, p2y, p3y, p4y);
+        const bbBottom = Math.max(p1y, p2y, p3y, p4y);
         const bbTop = -outerRadius;
-        p1y -= (bbBottom + this.bottomWidth);
-        p2y -= (bbBottom + this.bottomWidth);
-        p3y -= (bbBottom + this.bottomWidth);
-        p4y -= (bbBottom + this.bottomWidth);
+        p1y -= (bbBottom + 1);
+        p2y -= (bbBottom + 1);
+        p3y -= (bbBottom + 1);
+        p4y -= (bbBottom + 1);
 
         return {
             theta,
             innerRadius,
             outerRadius,
             p: [{x: p1x, y: p1y}, {x: p2x, y: p2y}, {x: p3x, y: p3y}, {x: p4x, y: p4y}],
-            bbTop: bbTop - (bbBottom + this.bottomWidth),
+            bbTop: bbTop - (bbBottom + 1),
         }
     }
 
@@ -213,10 +213,10 @@ class Conic {
             // Wall when the radii do not match is a nuisance.
             const { theta, innerRadius, outerRadius, p } = this.doAnnulusSectorMath();
             const bigArc = theta > Math.PI ? 1 : 0;
-            const wallD = `M ${p[0].x},${p[0].y}`
-                + `A ${innerRadius} ${innerRadius} 0 ${bigArc} 0 ${p[1].x},${p[1].y}`
-                + `L ${p[2].x},${p[2].y}`
-                + `A ${outerRadius} ${outerRadius} 0 ${bigArc} 1 ${p[3].x},${p[3].y}`
+            const wallD = `M ${p[0].x},${p[0].y} `
+                + `A ${innerRadius} ${innerRadius} 0 ${bigArc} 0 ${p[1].x},${p[1].y} `
+                + `L ${p[2].x},${p[2].y} `
+                + `A ${outerRadius} ${outerRadius} 0 ${bigArc} 1 ${p[3].x},${p[3].y} `
                 + `z`;
             result.push(wallD);
         }
