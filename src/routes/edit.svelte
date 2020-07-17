@@ -37,11 +37,7 @@
 </svelte:head>
 
 <article>
-<object data="{sides}/{height}/{bottomWidth}/{topWidth}/{units}.pdf"
-		title="template preview"
-		type='application/pdf'>
-	<ShapePreview2D shape={shape}/>
-</object>
+<ShapePreview2D shape={shape}/>
 <ShapePreview3D shape={shape}/>
 <aside>
 	<RadioSelector bind:value={sides} options={[[3, '3 sides'], [4, '4 sides'], [6, '6 sides'], [8, '8 sides'], [10, '10 sides'], ['∞', 'circle']]}/>

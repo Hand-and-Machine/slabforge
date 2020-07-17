@@ -58,6 +58,7 @@
     let ptHeight;
     let centerX = 0;
     let centerY = 0;
+    let zoom = 1;
     let vbWidth;
     let vbHeight;
 
@@ -90,14 +91,23 @@
     function handleMouseUp(event) {
         dragging = false;
     }
+
+    function handleScroll(event) {
+        if (event.deltaY > 0) {
+            zoom /= 1.2;
+        } else {
+            zoom *= 1.2;
+        }
+    }
 </script>
 
 <svg bind:this={svg}
-     viewBox="{centerX - vbWidth / 2} {centerY - vbHeight / 2} {vbWidth} {vbHeight}"
+     viewBox="{centerX - (vbWidth / zoom) / 2} {centerY - (vbHeight / zoom) / 2} {vbWidth / zoom} {vbHeight / zoom}"
      on:mousedown={handleMouseDown}
      on:mousemove={handleMouseMove}
      on:mouseup={handleMouseUp}
      on:mouseleave={handleMouseUp}
+     on:wheel|preventDefault={handleScroll}
 >
     {#each walls as wall}
         <path d={wall} fill="none" stroke="#000000"></path>
