@@ -6,7 +6,7 @@
 		margin: 0;
 	}
 
-	object {
+	article > :global(*) {
 		flex: 1;
 	}
 

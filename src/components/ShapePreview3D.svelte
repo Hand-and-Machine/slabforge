@@ -1,7 +1,4 @@
 <style>
-    canvas {
-        flex: 1;
-    }
 </style>
 
 <script>

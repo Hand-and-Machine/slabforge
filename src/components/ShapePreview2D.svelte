@@ -1,8 +1,4 @@
 <style>
-    svg {
-        flex: 1;
-    }
-
     path {
         vector-effect: non-scaling-stroke;
     }
