@@ -1,4 +1,6 @@
-import { Geometry, Vector3, Face3 } from 'three';
+import { Geometry, Vector3, Face3, Color } from 'three';
+
+const RED = new Color(0xFF6633);
 
 class Prism {
     constructor(sides, height, bottomWidth, topWidth, units) {
@@ -76,14 +78,14 @@ class Prism {
         return highestCoordinate * 2 + 2;
     }
 
-    calc3DGeometry() {
+    calc3DVertices() {
         let { sides, height } = this;
         const { bottomRadius, topRadius } = this.doMath();
-        const geometry = new Geometry();
+        const vertices = [];
 
         function makeVertex(x, y, z) {
-            const result = geometry.vertices.length;
-            geometry.vertices.push(new Vector3(x, y, z));
+            const result = vertices.length;
+            vertices.push(new Vector3(x, y, z));
             return result;
         }
         const halfThickness = 0.1;
@@ -107,14 +109,36 @@ class Prism {
                 innerTop: makeVertex(innerTopX, height, innerTopZ),
             });
         }
+        return {
+            vertices,
+            outerBottomCenter,
+            innerBottomCenter,
+            sideVertices,
+        }
+    }
+
+    calc3DGeometry() {
+        let { sides } = this;
+        let {
+            vertices,
+            outerBottomCenter,
+            innerBottomCenter,
+            sideVertices,
+        } = this.calc3DVertices();
+        const geometry = new Geometry();
+        geometry.vertices = vertices;
         for (let k = 0; k < sides; k++) {
             const thisSide = sideVertices[k];
             const nextSide = sideVertices[(k + 1) % sides];
+            const outerBottom = new Face3(outerBottomCenter, thisSide.outerBottom, nextSide.outerBottom);
+            outerBottom.color = RED;
+            const innerBottom = new Face3(innerBottomCenter, nextSide.innerBottom, thisSide.innerBottom);
+            innerBottom.color = RED;
             geometry.faces.push(
-                new Face3(outerBottomCenter, thisSide.outerBottom, nextSide.outerBottom),
+                outerBottom,
                 new Face3(thisSide.outerBottom, thisSide.outerTop, nextSide.outerBottom),
                 new Face3(nextSide.outerBottom, thisSide.outerTop, nextSide.outerTop),
-                new Face3(innerBottomCenter, nextSide.innerBottom, thisSide.innerBottom),
+                innerBottom,
                 new Face3(thisSide.innerBottom, nextSide.innerBottom, thisSide.innerTop),
                 new Face3(nextSide.innerBottom, nextSide.innerTop, thisSide.innerTop),
                 new Face3(thisSide.outerTop, thisSide.innerTop, nextSide.outerTop),
@@ -125,6 +149,8 @@ class Prism {
         return geometry;
     }
 }
+
+const CONIC_RESOLUTION = 100;
 
 class Conic {
     constructor(height, bottomWidth, topWidth, units) {
@@ -242,8 +268,7 @@ class Conic {
 
     calc3DGeometry() {
         const { height, bottomWidth, topWidth, units } = this;
-        const RESOLUTION = 100;
-        return new Prism(RESOLUTION, height, bottomWidth, topWidth, units).calc3DGeometry();
+        return new Prism(CONIC_RESOLUTION, height, bottomWidth, topWidth, units).calc3DGeometry();
     }
 }
 

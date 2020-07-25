@@ -32,6 +32,7 @@
 
         const meshMaterial = new THREE.MeshStandardMaterial({
             color: 0xE2725B,
+            vertexColors: true,
         });
         const mesh = new THREE.Mesh(geometry, meshMaterial);
         scene.add(mesh);
