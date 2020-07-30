@@ -13,7 +13,7 @@ function calcScale(units) {
 
 export async function get(req, res, next) {
     const { searchParams: params } = new URL(req.url, `http://${req.headers.host}`);
-    const { sides, height, bottomWidth, topWidth, units } = Object.fromEntries(params.entries());
+    const { sides, height, bottomWidth, topWidth, units, pageSize } = Object.fromEntries(params.entries());
     const shape = makeShape(sides, height, bottomWidth, topWidth, units);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
@@ -21,16 +21,15 @@ export async function get(req, res, next) {
     const relPageSize = shape.calcPDFWidth();
 
     const scale = calcScale(shape.units);
-    const pageSize = scale * relPageSize;
     const doc = new PDFDocument({
-        size: [pageSize, pageSize],
-        margin: 0,
+        size: pageSize,
+        margin: 36,
     });
     doc.pipe(res);
     if (sides === '∞') {
-        doc.text("circle", 10, 10);
+        doc.text("circle");
     } else {
-        doc.text(`${sides} sides`, 10, 10);
+        doc.text(`${sides} sides`);
     }
     doc.text(`height: ${height}${units}`)
         .text(`bottom width: ${bottomWidth}${units}`)

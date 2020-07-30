@@ -12,6 +12,7 @@
 
 	aside {
 		flex: 0;
+		margin: 0 0.5rem;
 	}
 </style>
 
@@ -28,6 +29,7 @@
 	let bottomWidth = 5;
 	let topWidth = 5;
 	let units = 'cm';
+	let pageSize = 'letter';
 
 	$: {
 		if (sidesSelection === 'prism' && sides === '∞') {
@@ -48,6 +50,7 @@
 			bottomWidth,
 			topWidth,
 			units,
+			pageSize,
 		});
 		shapePDFQuery = params.toString()
 	}
@@ -69,6 +72,14 @@
 	<SpinnerSliderControl bind:value={bottomWidth} min="1" step="0.1" max="50">Bottom Width</SpinnerSliderControl>
 	<SpinnerSliderControl bind:value={topWidth} min="1" step="0.1" max="50">Top Width</SpinnerSliderControl>
 	<RadioSelector bind:value={units} options={['in', 'cm']}/>
+	<fieldset>
+		<label>
+			Page Size
+			<select bind:value={pageSize}>
+				<option value="letter">Letter</option>
+			</select>
+		</label>
+	</fieldset>
 	<a href="shape.pdf?{shapePDFQuery}">Download PDF</a>
 </aside>
 </article>
