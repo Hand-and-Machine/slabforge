@@ -12,9 +12,9 @@ function calcScale(units) {
 }
 
 export async function get(req, res, next) {
-    const { params } = req.params;
-    const [ sides, height, baseSideLen, topSideLen, units ] = params;
-    const shape = makeShape(sides, height, baseSideLen, topSideLen, units);
+    const { searchParams: params } = new URL(req.url, `http://${req.headers.host}`);
+    const { sides, height, bottomWidth, topWidth, units } = Object.fromEntries(params.entries());
+    const shape = makeShape(sides, height, bottomWidth, topWidth, units);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
 
@@ -33,8 +33,8 @@ export async function get(req, res, next) {
         doc.text(`${sides} sides`, 10, 10);
     }
     doc.text(`height: ${height}${units}`)
-        .text(`bottom side length: ${baseSideLen}${units}`)
-        .text(`top side length: ${topSideLen}${units}`);
+        .text(`bottom width: ${bottomWidth}${units}`)
+        .text(`top width: ${topWidth}${units}`);
     doc.scale(scale)
         .translate(relPageSize / 2, relPageSize / 2)
         .lineWidth((72 / 8) / scale);

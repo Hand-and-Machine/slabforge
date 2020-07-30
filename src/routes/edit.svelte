@@ -39,6 +39,18 @@
 
 	let shape;
 	$: shape = makeShape(sides, height, bottomWidth, topWidth, units);
+
+	let shapePDFQuery;
+	$: {
+		const params = new URLSearchParams({
+			sides,
+			height,
+			bottomWidth,
+			topWidth,
+			units,
+		});
+		shapePDFQuery = params.toString()
+	}
 </script>
 
 <svelte:head>
@@ -57,6 +69,6 @@
 	<SpinnerSliderControl bind:value={bottomWidth} min="1" step="0.1" max="50">Bottom Width</SpinnerSliderControl>
 	<SpinnerSliderControl bind:value={topWidth} min="1" step="0.1" max="50">Top Width</SpinnerSliderControl>
 	<RadioSelector bind:value={units} options={['in', 'cm']}/>
-	<a href="{sides}/{height}/{bottomWidth}/{topWidth}/{units}.pdf">Download PDF</a>
+	<a href="shape.pdf?{shapePDFQuery}">Download PDF</a>
 </aside>
 </article>
