@@ -53,9 +53,9 @@
 	{#if sidesSelection === 'prism'}
 		<SpinnerSliderControl bind:value={sides} min="3" step="1" max="20">Sides</SpinnerSliderControl>
 	{/if}
-	<SpinnerSliderControl bind:value={height} min="1" step="0.1">Height</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={bottomWidth} min="1" step="0.1">Bottom Width</SpinnerSliderControl>
-	<SpinnerSliderControl bind:value={topWidth} min="1" step="0.1">Top Width</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={height} min="1" step="0.1" max="50">Height</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={bottomWidth} min="1" step="0.1" max="50">Bottom Width</SpinnerSliderControl>
+	<SpinnerSliderControl bind:value={topWidth} min="1" step="0.1" max="50">Top Width</SpinnerSliderControl>
 	<RadioSelector bind:value={units} options={['in', 'cm']}/>
 	<a href="{sides}/{height}/{bottomWidth}/{topWidth}/{units}.pdf">Download PDF</a>
 </aside>
