@@ -22,16 +22,18 @@
 	import ShapePreview3D from '../components/ShapePreview3D.svelte';
 	import RadioSelector from '../components/RadioSelector.svelte';
 
-	let sidesSelection = 4;
-	let sides = sidesSelection;
+	let sidesSelection = 'prism';
+	let sides = 4;
 	let height = 5;
 	let bottomWidth = 5;
 	let topWidth = 5;
 	let units = 'cm';
 
 	$: {
-		if (sidesSelection !== 'custom') {
-			sides = sidesSelection;
+		if (sidesSelection === 'prism' && sides === '∞') {
+			sides = 4;
+		} else if (sidesSelection === 'circle' && sides !== '∞') {
+			sides = '∞';
 		}
 	}
 
@@ -47,8 +49,8 @@
 <ShapePreview2D shape={shape}/>
 <ShapePreview3D shape={shape}/>
 <aside>
-	<RadioSelector bind:value={sidesSelection} options={[[3, '3 sides'], [4, '4 sides'], [6, '6 sides'], ['custom', 'custom sides'], ['∞', 'circle']]}/>
-	{#if sidesSelection === 'custom'}
+	<RadioSelector bind:value={sidesSelection} options={['prism', 'circle']}/>
+	{#if sidesSelection === 'prism'}
 		<SpinnerSliderControl bind:value={sides} min="3" step="1" max="20">Sides</SpinnerSliderControl>
 	{/if}
 	<SpinnerSliderControl bind:value={height} min="1" step="0.1">Height</SpinnerSliderControl>
