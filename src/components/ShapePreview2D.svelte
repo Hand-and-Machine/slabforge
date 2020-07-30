@@ -94,15 +94,15 @@
 
     function handleScroll(event) {
         // we want the place where the mouse was to remain fixed
-        let oldSvgX = px2svg(event.pageX - svgWidth / 2, shape.units, zoom);
-        let oldSvgY = px2svg(event.pageY - svgHeight / 2, shape.units, zoom);
+        let oldSvgX = px2svg(event.offsetX - svgWidth / 2, shape.units, zoom);
+        let oldSvgY = px2svg(event.offsetY - svgHeight / 2, shape.units, zoom);
         if (event.deltaY > 0) {
             zoom /= 1.2;
         } else {
             zoom *= 1.2;
         }
-        let newSvgX = px2svg(event.pageX - svgWidth / 2, shape.units, zoom);
-        let newSvgY = px2svg(event.pageY - svgHeight / 2, shape.units, zoom);
+        let newSvgX = px2svg(event.offsetX - svgWidth / 2, shape.units, zoom);
+        let newSvgY = px2svg(event.offsetY - svgHeight / 2, shape.units, zoom);
         centerX -= (newSvgX - oldSvgX);
         centerY -= (newSvgY - oldSvgY);
     }
