@@ -63,8 +63,8 @@
     $: {
         vbWidth = px2svg(svgWidth, shape.units, zoom);
         vbHeight = px2svg(svgHeight, shape.units, zoom);
-        centerX = clamp(centerX, shape.calcPDFWidth() / 2);
-        centerY = clamp(centerY, shape.calcPDFWidth() / 2);
+        centerX = clamp(centerX, shape.calcPDFBounds()[0] / 2);
+        centerY = clamp(centerY, shape.calcPDFBounds()[1] / 2);
     }
 
     let dragLastX = 0;
@@ -79,10 +79,8 @@
 
     function handleMouseMove(event) {
         if (dragging) {
-            let { pageX, pageY } = event;
-            console.log({ centerX, centerY, pageX, pageY, dragLastX, dragLastY });
-            centerX = clamp(centerX - px2svg(event.pageX - dragLastX, shape.units, zoom), shape.calcPDFWidth() / 2);
-            centerY = clamp(centerY - px2svg(event.pageY - dragLastY, shape.units, zoom), shape.calcPDFWidth() / 2);
+            centerX = clamp(centerX - px2svg(event.pageX - dragLastX, shape.units, zoom), shape.calcPDFBounds()[0] / 2);
+            centerY = clamp(centerY - px2svg(event.pageY - dragLastY, shape.units, zoom), shape.calcPDFBounds()[1] / 2);
             dragLastX = event.pageX;
             dragLastY = event.pageY;
         }

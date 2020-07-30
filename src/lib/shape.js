@@ -63,19 +63,17 @@ class Prism {
         return result;
     }
 
-    calcPDFWidth() {
+    calcPDFBounds() {
         const walls = this.calcWalls();
-        const points = [];
+        const xs = [];
+        const ys = [];
         for (const wall of walls) {
             for (const point of wall.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)) {
-                points.push([parseFloat(point[1]), parseFloat(point[2])]);
+                xs.push(parseFloat(point[1]));
+                ys.push(parseFloat(point[2]));
             }
         }
-        let highestCoordinate = 0;
-        for (const point of points) {
-            highestCoordinate = Math.max(highestCoordinate, ...point);
-        }
-        return highestCoordinate * 2 + 2;
+        return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)];
     }
 
     calc3DVertices() {
@@ -249,21 +247,22 @@ class Conic {
         return result;
     }
 
-    calcPDFWidth() {
+    calcPDFBounds() {
         const { bottomWidth } = this;
         const { bottomRadius, topRadius, wallLength } = this.doMath();
-        const coordinates = [bottomWidth];
+        const xs = [0];
+        const ys = [0, bottomWidth];
         if (bottomRadius === topRadius) {
             const circumference = 2 * Math.PI * bottomRadius;
-            coordinates.push(circumference / 2, wallLength);
+            xs.push(-circumference / 2, circumference / 2);
+            ys.push(-wallLength - 1);
         } else {
             const { p, bbTop } = this.doAnnulusSectorMath();
-            const xs = p.map(a => Math.abs(a.x));
-            const ys = p.map(a => Math.abs(a.y));
-            coordinates.push(...xs, ...ys, Math.abs(bbTop));
+            xs.push(...p.map(a => Math.abs(a.x)));
+            ys.push(...p.map(a => Math.abs(a.y)));
+            ys.push(bbTop);
         }
-        const highestCoordinate = Math.max(...coordinates);
-        return highestCoordinate * 2 + 2;
+        return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)];
     }
 
     calc3DGeometry() {

@@ -18,14 +18,21 @@ export async function get(req, res, next) {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
 
-    const relPageSize = shape.calcPDFWidth();
-
     const scale = calcScale(shape.units);
+    const [ minPDFWidth, minPDFHeight ] = shape.calcPDFBounds().map(x => x * scale);
     const doc = new PDFDocument({
         size: pageSize,
         margin: 36,
     });
     doc.pipe(res);
+
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+
+    if (pageWidth < minPDFWidth || pageHeight < minPDFHeight) {
+        console.log('need to run page tiling ourselves'); // TODO
+    }
+
     if (sides === '∞') {
         doc.text("circle");
     } else {
@@ -34,8 +41,8 @@ export async function get(req, res, next) {
     doc.text(`height: ${height}${units}`)
         .text(`bottom width: ${bottomWidth}${units}`)
         .text(`top width: ${topWidth}${units}`);
-    doc.scale(scale)
-        .translate(relPageSize / 2, relPageSize / 2)
+    doc.translate(pageWidth / 2, pageHeight / 2)
+        .scale(scale)
         .lineWidth((72 / 8) / scale);
     for (let wall of shape.calcWalls()) {
         doc.path(wall).stroke();
