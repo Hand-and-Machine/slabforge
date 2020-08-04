@@ -68,9 +68,10 @@ class Prism {
         const xs = [];
         const ys = [];
         for (const wall of walls) {
-            for (const point of wall.matchAll(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)) {
-                xs.push(parseFloat(point[1]));
-                ys.push(parseFloat(point[2]));
+            for (const point of wall.matchAll(/(-?\d+(?:\.\d+)?(?:e-?\d+)?)?,(-?\d+(?:\.\d+)?(?:e-?\d+)?)/g)) {
+                let [ x, y ] = [ point[1], point[2] ];
+                xs.push(parseFloat(x));
+                ys.push(parseFloat(y));
             }
         }
         return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)];
@@ -258,8 +259,8 @@ class Conic {
             ys.push(-wallLength - 1);
         } else {
             const { p, bbTop } = this.doAnnulusSectorMath();
-            xs.push(...p.map(a => Math.abs(a.x)));
-            ys.push(...p.map(a => Math.abs(a.y)));
+            xs.push(...p.map(a => a.x));
+            ys.push(...p.map(a => a.y));
             ys.push(bbTop);
         }
         return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)];

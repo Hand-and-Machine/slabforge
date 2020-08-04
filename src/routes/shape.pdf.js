@@ -29,9 +29,11 @@ export async function get(req, res, next) {
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
 
-    if (pageWidth < minPDFWidth || pageHeight < minPDFHeight) {
-        console.log('need to run page tiling ourselves'); // TODO
-    }
+    const widthPages = Math.ceil(minPDFWidth / pageWidth);
+    const heightPages = Math.ceil(minPDFHeight / pageHeight);
+
+    const fullWidth = widthPages * pageWidth;
+    const fullHeight = heightPages * pageHeight;
 
     if (sides === '∞') {
         doc.text("circle");
@@ -41,11 +43,20 @@ export async function get(req, res, next) {
     doc.text(`height: ${height}${units}`)
         .text(`bottom width: ${bottomWidth}${units}`)
         .text(`top width: ${topWidth}${units}`);
-    doc.translate(pageWidth / 2, pageHeight / 2)
-        .scale(scale)
-        .lineWidth((72 / 8) / scale);
-    for (let wall of shape.calcWalls()) {
-        doc.path(wall).stroke();
+    for (let pageY = 0; pageY < heightPages; pageY++) {
+        for (let pageX = 0; pageX < widthPages; pageX++) {
+            doc.save();
+            doc.translate(fullWidth / 2 - pageX * pageWidth, fullHeight / 2 - pageY * pageHeight)
+                .scale(scale)
+                .lineWidth((72 / 8) / scale);
+            for (let wall of shape.calcWalls()) {
+                doc.path(wall).stroke();
+            }
+            doc.restore();
+            if (pageX < widthPages - 1 || pageY < heightPages - 1) {
+                doc.addPage();
+            }
+        }
     }
     doc.end();
 }
