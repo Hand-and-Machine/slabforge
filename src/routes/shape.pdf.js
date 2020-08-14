@@ -26,14 +26,15 @@ export async function get(req, res, next) {
     });
     doc.pipe(res);
 
-    const pageWidth = doc.page.width;
-    const pageHeight = doc.page.height;
+    const pageMargin = doc.page.margins.top;
+    const pageContentWidth = doc.page.width - 2 * pageMargin;
+    const pageContentHeight = doc.page.height - 2 * pageMargin;
 
-    const widthPages = Math.ceil(minPDFWidth / pageWidth);
-    const heightPages = Math.ceil(minPDFHeight / pageHeight);
+    const widthPages = Math.ceil(minPDFWidth / pageContentWidth);
+    const heightPages = Math.ceil(minPDFHeight / pageContentHeight);
 
-    const fullWidth = widthPages * pageWidth;
-    const fullHeight = heightPages * pageHeight;
+    const fullWidth = widthPages * pageContentWidth;
+    const fullHeight = heightPages * pageContentHeight;
 
     if (sides === '∞') {
         doc.text("circle");
@@ -46,7 +47,11 @@ export async function get(req, res, next) {
     for (let pageY = 0; pageY < heightPages; pageY++) {
         for (let pageX = 0; pageX < widthPages; pageX++) {
             doc.save();
-            doc.translate(fullWidth / 2 - pageX * pageWidth, fullHeight / 2 - pageY * pageHeight)
+            doc.rect(pageMargin, pageMargin, pageContentWidth, pageContentHeight).clip();
+            doc.translate(
+                pageMargin + fullWidth / 2 - pageX * pageContentWidth,
+                pageMargin + fullHeight / 2 - pageY * pageContentHeight
+            )
                 .scale(scale)
                 .lineWidth((72 / 8) / scale);
             for (let wall of shape.calcWalls()) {
