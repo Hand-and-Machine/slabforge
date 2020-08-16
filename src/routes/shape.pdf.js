@@ -43,7 +43,8 @@ export async function get(req, res, next) {
     }
     doc.text(`height: ${height}${units}`)
         .text(`bottom width: ${bottomWidth}${units}`)
-        .text(`top width: ${topWidth}${units}`);
+        .text(`top width: ${topWidth}${units}`)
+        .text(shape.calcBevels());
     for (let pageY = 0; pageY < heightPages; pageY++) {
         for (let pageX = 0; pageX < widthPages; pageX++) {
             doc.save();

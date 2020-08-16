@@ -147,6 +147,14 @@ class Prism {
         geometry.computeFaceNormals();
         return geometry;
     }
+
+    calcBevels() {
+        const { sides } = this;
+        const interiorAngle = 180 * (sides - 2) / sides;
+        const halfInteriorAngle = interiorAngle / 2;
+        const complementHalfInteriorAngle = 90 - halfInteriorAngle;
+        return `bevel wall corners ${complementHalfInteriorAngle}° outwards`;
+    }
 }
 
 const CONIC_RESOLUTION = 100;
@@ -269,6 +277,10 @@ class Conic {
     calc3DGeometry() {
         const { height, bottomWidth, topWidth, units } = this;
         return new Prism(CONIC_RESOLUTION, height, bottomWidth, topWidth, units).calc3DGeometry();
+    }
+
+    calcBevels() {
+        return "bevel wall edges by 45° one in and one out so the seam comes out nice";
     }
 }
 
