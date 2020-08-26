@@ -77,6 +77,7 @@
 			Page Size
 			<select bind:value={pageSize}>
 				<option value="letter">Letter</option>
+				<option value="auto">Auto</option>
 			</select>
 		</label>
 	</fieldset>
