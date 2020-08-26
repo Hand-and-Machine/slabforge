@@ -21,6 +21,8 @@
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
+        renderer.setClearColor(0xffffff, 1);
+
         const light = new THREE.PointLight(0xffffff, 0.5, 0, 2);
         light.position.set(0, y * 3, 0);
         scene.add(light);
