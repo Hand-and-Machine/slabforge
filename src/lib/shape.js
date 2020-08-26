@@ -101,6 +101,7 @@ class Prism {
         const halfThickness = 0.1;
         const outerBottomCenter = makeVertex(0, -halfThickness, 0);
         const innerBottomCenter = makeVertex(0, halfThickness, 0);
+        const topCenter = makeVertex(0, height, 0);
         const sideVertices = [];
         for (let k = 0; k < sides; k++) {
             const theta = (2 * Math.PI * k) / sides;
@@ -135,6 +136,7 @@ class Prism {
             vertices,
             outerBottomCenter,
             innerBottomCenter,
+            topCenter,
             sideVertices,
         };
     }
@@ -200,6 +202,41 @@ class Prism {
             );
         }
         geometry.computeFaceNormals();
+        return geometry;
+    }
+
+    calcHighlightGeometry(target) {
+        let { sides } = this;
+        let {
+            vertices,
+            outerBottomCenter,
+            innerBottomCenter,
+            topCenter,
+            sideVertices,
+        } = this.calc3DVertices();
+        const geometry = new Geometry();
+        if (target === "height") {
+            geometry.vertices.push(
+                vertices[innerBottomCenter],
+                vertices[topCenter]
+            );
+        } else if (target === "topWidth") {
+            geometry.vertices.push(
+                vertices[sideVertices[0].innerTop],
+                vertices[sideVertices[Math.floor(sides / 2)].innerTop]
+            );
+        } else if (target === "bottomWidth") {
+            geometry.vertices.push(
+                vertices[sideVertices[0].innerBottom],
+                vertices[sideVertices[Math.floor(sides / 2)].innerBottom]
+            );
+        } else {
+            // if we let geometry.vertices be empty, this causes problems, for some reason.
+            geometry.vertices.push(
+                vertices[outerBottomCenter],
+                vertices[innerBottomCenter]
+            );
+        }
         return geometry;
     }
 
@@ -366,6 +403,17 @@ class Conic {
             topWidth,
             units
         ).calc3DGeometry();
+    }
+
+    calcHighlightGeometry(target) {
+        const { height, bottomWidth, topWidth, units } = this;
+        return new Prism(
+            CONIC_RESOLUTION,
+            height,
+            bottomWidth,
+            topWidth,
+            units
+        ).calcHighlightGeometry(target);
     }
 
     calcBevels() {

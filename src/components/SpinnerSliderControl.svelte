@@ -5,7 +5,7 @@
     export let step = undefined;
 </script>
 
-<fieldset>
+<fieldset on:mouseenter on:mouseleave>
     <label>
         <slot />
         <input type="range" {min} {max} {step} bind:value />

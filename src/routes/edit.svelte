@@ -12,6 +12,7 @@
     let topWidth = 5;
     let units = "cm";
     let pageSize = "letter";
+    let highlightTarget = "";
 
     $: {
         if (sidesSelection === "prism" && sides === "∞") {
@@ -62,7 +63,7 @@
 
 <article>
     <ShapePreview2D {shape} />
-    <ShapePreview3D {shape} />
+    <ShapePreview3D {shape} {highlightTarget} />
     <aside>
         <RadioSelector
             bind:value={sidesSelection}
@@ -72,17 +73,31 @@
                 Sides
             </SpinnerSliderControl>
         {/if}
-        <SpinnerSliderControl bind:value={height} min="1" step="0.1" max="50">
+        <SpinnerSliderControl
+            bind:value={height}
+            min="1"
+            step="0.1"
+            max="50"
+            on:mouseenter={() => (highlightTarget = 'height')}
+            on:mouseleave={() => (highlightTarget = '')}>
             Height
         </SpinnerSliderControl>
         <SpinnerSliderControl
             bind:value={bottomWidth}
             min="1"
             step="0.1"
-            max="50">
+            max="50"
+            on:mouseenter={() => (highlightTarget = 'bottomWidth')}
+            on:mouseleave={() => (highlightTarget = '')}>
             Bottom Width
         </SpinnerSliderControl>
-        <SpinnerSliderControl bind:value={topWidth} min="1" step="0.1" max="50">
+        <SpinnerSliderControl
+            bind:value={topWidth}
+            min="1"
+            step="0.1"
+            max="50"
+            on:mouseenter={() => (highlightTarget = 'topWidth')}
+            on:mouseleave={() => (highlightTarget = '')}>
             Top Width
         </SpinnerSliderControl>
         <RadioSelector bind:value={units} options={['in', 'cm']} />

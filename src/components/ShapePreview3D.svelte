@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
     export let shape;
+    export let highlightTarget;
 
     let canvas;
     const geometry = shape.calc3DGeometry();
@@ -12,6 +13,13 @@
         geometry.verticesNeedUpdate = true;
         geometry.faces = g2.faces;
         geometry.elementsNeedUpdate = true;
+    }
+    const highlightGeometry = shape.calcHighlightGeometry(highlightTarget);
+    $: {
+        console.log(highlightTarget);
+        let g2 = shape.calcHighlightGeometry(highlightTarget);
+        highlightGeometry.vertices = g2.vertices;
+        highlightGeometry.verticesNeedUpdate = true;
     }
     let y;
     $: y = shape.height / 2;
@@ -35,6 +43,12 @@
         });
         const mesh = new THREE.Mesh(geometry, meshMaterial);
         scene.add(mesh);
+
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0x3333ff,
+        });
+        const lines = new THREE.Line(highlightGeometry, lineMaterial);
+        scene.add(lines);
 
         camera.position.setZ(10);
 
