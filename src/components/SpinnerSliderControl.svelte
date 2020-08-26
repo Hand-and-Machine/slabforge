@@ -7,8 +7,8 @@
 
 <fieldset>
     <label>
-        <slot/>
-        <input type="range" min={min} max={max} step={step} bind:value={value}>
-        <input type="number" min={min} max={max} step={step} bind:value={value}>
+        <slot />
+        <input type="range" {min} {max} {step} bind:value />
+        <input type="number" {min} {max} {step} bind:value />
     </label>
 </fieldset>

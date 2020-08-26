@@ -1,10 +1,7 @@
-<style>
-</style>
-
 <script>
-    import * as THREE from 'three';
-    import { onMount } from 'svelte';
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+    import * as THREE from "three";
+    import { onMount } from "svelte";
+    import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
     export let shape;
 
     let canvas;
@@ -31,7 +28,7 @@
         scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
         const meshMaterial = new THREE.MeshStandardMaterial({
-            color: 0xE2725B,
+            color: 0xe2725b,
             vertexColors: true,
         });
         const mesh = new THREE.Mesh(geometry, meshMaterial);
@@ -39,7 +36,7 @@
 
         camera.position.setZ(10);
 
-        const controls = new OrbitControls( camera, renderer.domElement );
+        const controls = new OrbitControls(camera, renderer.domElement);
         controls.target = new THREE.Vector3(0, y, 0);
 
         let frame;
@@ -52,8 +49,8 @@
             controls.target.setY(y);
             controls.update();
             light.position.setY(y * 2.5);
-            renderer.render( scene, camera );
-        }());
+            renderer.render(scene, camera);
+        })();
 
         return () => {
             cancelAnimationFrame(frame);
@@ -61,4 +58,8 @@
     });
 </script>
 
-<canvas width="200" height="200" bind:this={canvas}></canvas>
+<style>
+
+</style>
+
+<canvas width="200" height="200" bind:this={canvas} />

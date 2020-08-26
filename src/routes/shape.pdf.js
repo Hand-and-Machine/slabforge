@@ -1,10 +1,10 @@
-import PDFDocument from 'pdfkit';
-import makeShape from '../lib/shape.js';
+import PDFDocument from "pdfkit";
+import makeShape from "../lib/shape.js";
 
 function calcScale(units) {
-    if (units === 'in') {
+    if (units === "in") {
         return 72;
-    } else if (units === 'cm') {
+    } else if (units === "cm") {
         return 28.35;
     } else {
         return 1;
@@ -12,17 +12,29 @@ function calcScale(units) {
 }
 
 export async function get(req, res, next) {
-    const { searchParams: params } = new URL(req.url, `http://${req.headers.host}`);
-    let { sides, height, bottomWidth, topWidth, units, pageSize } = Object.fromEntries(params.entries());
+    const { searchParams: params } = new URL(
+        req.url,
+        `http://${req.headers.host}`
+    );
+    let {
+        sides,
+        height,
+        bottomWidth,
+        topWidth,
+        units,
+        pageSize,
+    } = Object.fromEntries(params.entries());
     const shape = makeShape(sides, height, bottomWidth, topWidth, units);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="shape.pdf"');
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
 
     const scale = calcScale(shape.units);
-    const [ minPDFWidth, minPDFHeight ] = shape.calcPDFBounds().map(x => x * scale);
+    const [minPDFWidth, minPDFHeight] = shape
+        .calcPDFBounds()
+        .map((x) => x * scale);
 
-    if (pageSize === 'auto') {
-        pageSize = [ minPDFWidth + 72, minPDFHeight + 72 ];
+    if (pageSize === "auto") {
+        pageSize = [minPDFWidth + 72, minPDFHeight + 72];
     }
     const doc = new PDFDocument({
         size: pageSize,
@@ -40,7 +52,7 @@ export async function get(req, res, next) {
     const fullWidth = widthPages * pageContentWidth;
     const fullHeight = heightPages * pageContentHeight;
 
-    if (sides === '∞') {
+    if (sides === "∞") {
         doc.text("circle");
     } else {
         doc.text(`${sides} sides`);
@@ -52,13 +64,18 @@ export async function get(req, res, next) {
     for (let pageY = 0; pageY < heightPages; pageY++) {
         for (let pageX = 0; pageX < widthPages; pageX++) {
             doc.save();
-            doc.rect(pageMargin, pageMargin, pageContentWidth, pageContentHeight).clip();
+            doc.rect(
+                pageMargin,
+                pageMargin,
+                pageContentWidth,
+                pageContentHeight
+            ).clip();
             doc.translate(
                 pageMargin + fullWidth / 2 - pageX * pageContentWidth,
                 pageMargin + fullHeight / 2 - pageY * pageContentHeight
             )
                 .scale(scale)
-                .lineWidth((72 / 8) / scale);
+                .lineWidth(72 / 8 / scale);
             for (let wall of shape.calcWalls()) {
                 doc.path(wall).stroke();
             }

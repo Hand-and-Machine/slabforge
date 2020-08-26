@@ -1,11 +1,5 @@
-<style>
-    path {
-        vector-effect: non-scaling-stroke;
-    }
-</style>
-
 <script>
-    import { onMount } from 'svelte';
+    import { onMount } from "svelte";
     export let shape;
 
     let svg;
@@ -24,13 +18,13 @@
 
     function px2svg(pxLen, units, zoom) {
         // on my current primary monitor, 72pt is 96px
-        let ptLen = pxLen * 72 / 96;
+        let ptLen = pxLen * (72 / 96);
         // these numbers are from https://www.w3.org/Style/Examples/007/units.en.html
         let svgLen;
-        if (units === 'in') {
+        if (units === "in") {
             svgLen = ptLen / 72;
-        } else if (units === 'cm') {
-            svgLen = ptLen / 72 * 2.54;
+        } else if (units === "cm") {
+            svgLen = (ptLen / 72) * 2.54;
         }
         return svgLen / zoom;
     }
@@ -79,8 +73,14 @@
 
     function handleMouseMove(event) {
         if (dragging) {
-            centerX = clamp(centerX - px2svg(event.pageX - dragLastX, shape.units, zoom), shape.calcPDFBounds()[0] / 2);
-            centerY = clamp(centerY - px2svg(event.pageY - dragLastY, shape.units, zoom), shape.calcPDFBounds()[1] / 2);
+            centerX = clamp(
+                centerX - px2svg(event.pageX - dragLastX, shape.units, zoom),
+                shape.calcPDFBounds()[0] / 2
+            );
+            centerY = clamp(
+                centerY - px2svg(event.pageY - dragLastY, shape.units, zoom),
+                shape.calcPDFBounds()[1] / 2
+            );
             dragLastX = event.pageX;
             dragLastY = event.pageY;
         }
@@ -101,20 +101,29 @@
         }
         let newSvgX = px2svg(event.offsetX - svgWidth / 2, shape.units, zoom);
         let newSvgY = px2svg(event.offsetY - svgHeight / 2, shape.units, zoom);
-        centerX -= (newSvgX - oldSvgX);
-        centerY -= (newSvgY - oldSvgY);
+        centerX -= newSvgX - oldSvgX;
+        centerY -= newSvgY - oldSvgY;
     }
 </script>
 
-<svg bind:this={svg}
-     viewBox="{centerX - vbWidth / 2} {centerY - vbHeight / 2} {vbWidth} {vbHeight}"
-     on:mousedown={handleMouseDown}
-     on:mousemove={handleMouseMove}
-     on:mouseup={handleMouseUp}
-     on:mouseleave={handleMouseUp}
-     on:wheel|preventDefault={handleScroll}
->
+<style>
+    path {
+        vector-effect: non-scaling-stroke;
+    }
+</style>
+
+<svg
+    bind:this={svg}
+    viewBox="{centerX - vbWidth / 2}
+    {centerY - vbHeight / 2}
+    {vbWidth}
+    {vbHeight}"
+    on:mousedown={handleMouseDown}
+    on:mousemove={handleMouseMove}
+    on:mouseup={handleMouseUp}
+    on:mouseleave={handleMouseUp}
+    on:wheel|preventDefault={handleScroll}>
     {#each walls as wall}
-        <path d={wall} fill="none" stroke="#000000"></path>
+        <path d={wall} fill="none" stroke="#000000" />
     {/each}
 </svg>
