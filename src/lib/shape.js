@@ -1,6 +1,7 @@
 import { Geometry, Vector3, Face3, Color } from "three";
 
 const RED = new Color(0xff6633);
+const CLAY_THICKNESS = 0.2; // TODO set to be unit-relative
 
 class Prism {
     constructor(sides, height, bottomWidth, topWidth, units) {
@@ -34,6 +35,7 @@ class Prism {
     calcWalls() {
         const { sides } = this;
         const { bottomRadius, topSideLen, wallLength } = this.doMath();
+        const wallData = [];
         const result = [];
         for (let k = 0; k < sides; k++) {
             const theta = (2 * Math.PI * k) / sides;
@@ -65,7 +67,34 @@ class Prism {
             // Then, at long last, we glue it all together:
             let wallD = `M ${x},${y} L ${upper1X},${upper1Y} ${upper2X},${upper2Y} ${nextX},${nextY} z`;
             result.push(wallD);
+            wallData.push({ upper1X, upper1Y, upper2X, upper2Y, midTheta });
         }
+
+        // calculate the bevel guide
+        const { upper1X, upper1Y, upper2X, upper2Y, midTheta } = wallData[0];
+        const GUIDE_OFFSET = 1;
+        const bevelGuideStartTopX = upper1X + Math.cos(midTheta) * GUIDE_OFFSET;
+        const bevelGuideStartTopY = upper1Y + Math.sin(midTheta) * GUIDE_OFFSET;
+        const bevelGuideEndTopX = upper2X + Math.cos(midTheta) * GUIDE_OFFSET;
+        const bevelGuideEndTopY = upper2Y + Math.sin(midTheta) * GUIDE_OFFSET;
+        const interiorAngle = (Math.PI * (sides - 2)) / sides;
+        const halfInteriorAngle = interiorAngle / 2;
+        const bevelFactor = Math.PI / 2 - halfInteriorAngle;
+        const bevelGuideStartBottomX =
+            bevelGuideStartTopX +
+            Math.cos(midTheta - bevelFactor) * CLAY_THICKNESS;
+        const bevelGuideStartBottomY =
+            bevelGuideStartTopY +
+            Math.sin(midTheta - bevelFactor) * CLAY_THICKNESS;
+        const bevelGuideEndBottomX =
+            bevelGuideEndTopX +
+            Math.cos(midTheta + bevelFactor) * CLAY_THICKNESS;
+        const bevelGuideEndBottomY =
+            bevelGuideEndTopY +
+            Math.sin(midTheta + bevelFactor) * CLAY_THICKNESS;
+        result.push(
+            `M ${bevelGuideStartTopX},${bevelGuideStartTopY} L ${bevelGuideStartBottomX},${bevelGuideStartBottomY} ${bevelGuideEndBottomX},${bevelGuideEndBottomY} ${bevelGuideEndTopX},${bevelGuideEndTopY} z`
+        );
         return result;
     }
 
@@ -98,7 +127,7 @@ class Prism {
             vertices.push(new Vector3(x, y, z));
             return result;
         }
-        const halfThickness = 0.1;
+        const halfThickness = CLAY_THICKNESS / 2;
         const outerBottomCenter = makeVertex(0, -halfThickness, 0);
         const innerBottomCenter = makeVertex(0, halfThickness, 0);
         const topCenter = makeVertex(0, height, 0);
@@ -238,14 +267,6 @@ class Prism {
             );
         }
         return geometry;
-    }
-
-    calcBevels() {
-        const { sides } = this;
-        const interiorAngle = (180 * (sides - 2)) / sides;
-        const halfInteriorAngle = interiorAngle / 2;
-        const complementHalfInteriorAngle = 90 - halfInteriorAngle;
-        return `bevel wall corners ${complementHalfInteriorAngle}° outwards`;
     }
 }
 
@@ -414,10 +435,6 @@ class Conic {
             topWidth,
             units
         ).calcHighlightGeometry(target);
-    }
-
-    calcBevels() {
-        return "bevel wall edges by 45° one in and one out so the seam comes out nice";
     }
 }
 
