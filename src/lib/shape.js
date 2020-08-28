@@ -1,7 +1,38 @@
 import { Geometry, Vector3, Face3, Color } from "three";
 
 const RED = new Color(0xff6633);
-const CLAY_THICKNESS = 0.2; // TODO set to be unit-relative
+function clayThicknessIn(targetUnits) {
+    return convertUnits(0.5, "in", targetUnits);
+}
+
+export function convertUnits(quantity, from, to) {
+    let quantityPt;
+    if (from === "pt") {
+        quantityPt = quantity;
+    } else if (from === "in") {
+        quantityPt = quantity * 72;
+    } else if (from === "cm") {
+        quantityPt = quantity * 28.35;
+    } else if (from === "px") {
+        // on my current primary monitor, 72pt is 96px
+        quantityPt = quantity * (72 / 96);
+    } else {
+        throw new Error(`unknown unit: ${from}`);
+    }
+
+    if (to === "pt") {
+        return quantityPt;
+    } else if (to === "in") {
+        return quantityPt / 72;
+    } else if (to === "cm") {
+        return quantityPt / 28.35;
+    } else if (to === "px") {
+        // on my current primary monitor, 72pt is 96px
+        return quantityPt / (72 / 96);
+    } else {
+        throw new Error(`unknown unit: ${to}`);
+    }
+}
 
 class Prism {
     constructor(sides, height, bottomWidth, topWidth, units) {
@@ -33,7 +64,7 @@ class Prism {
     }
 
     calcWalls() {
-        const { sides } = this;
+        const { sides, units } = this;
         const { bottomRadius, topSideLen, wallLength } = this.doMath();
         const wallData = [];
         const result = [];
@@ -71,6 +102,7 @@ class Prism {
         }
 
         // calculate the bevel guide
+        const clayThickness = clayThicknessIn(units);
         const { upper1X, upper1Y, upper2X, upper2Y, midTheta } = wallData[0];
         const GUIDE_OFFSET = 1;
         const bevelGuideStartTopX = upper1X + Math.cos(midTheta) * GUIDE_OFFSET;
@@ -82,16 +114,16 @@ class Prism {
         const bevelFactor = Math.PI / 2 - halfInteriorAngle;
         const bevelGuideStartBottomX =
             bevelGuideStartTopX +
-            Math.cos(midTheta - bevelFactor) * CLAY_THICKNESS;
+            Math.cos(midTheta - bevelFactor) * clayThickness;
         const bevelGuideStartBottomY =
             bevelGuideStartTopY +
-            Math.sin(midTheta - bevelFactor) * CLAY_THICKNESS;
+            Math.sin(midTheta - bevelFactor) * clayThickness;
         const bevelGuideEndBottomX =
             bevelGuideEndTopX +
-            Math.cos(midTheta + bevelFactor) * CLAY_THICKNESS;
+            Math.cos(midTheta + bevelFactor) * clayThickness;
         const bevelGuideEndBottomY =
             bevelGuideEndTopY +
-            Math.sin(midTheta + bevelFactor) * CLAY_THICKNESS;
+            Math.sin(midTheta + bevelFactor) * clayThickness;
         result.push(
             `M ${bevelGuideStartTopX},${bevelGuideStartTopY} L ${bevelGuideStartBottomX},${bevelGuideStartBottomY} ${bevelGuideEndBottomX},${bevelGuideEndBottomY} ${bevelGuideEndTopX},${bevelGuideEndTopY} z`
         );
@@ -118,7 +150,7 @@ class Prism {
     }
 
     calc3DVertices() {
-        let { sides, height } = this;
+        let { sides, height, units } = this;
         const { bottomRadius, topRadius } = this.doMath();
         const vertices = [];
 
@@ -127,7 +159,8 @@ class Prism {
             vertices.push(new Vector3(x, y, z));
             return result;
         }
-        const halfThickness = CLAY_THICKNESS / 2;
+        const clayThickness = clayThicknessIn(units);
+        const halfThickness = clayThickness / 2;
         const outerBottomCenter = makeVertex(0, -halfThickness, 0);
         const innerBottomCenter = makeVertex(0, halfThickness, 0);
         const topCenter = makeVertex(0, height, 0);

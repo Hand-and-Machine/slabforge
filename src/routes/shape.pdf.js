@@ -1,14 +1,8 @@
 import PDFDocument from "pdfkit";
-import makeShape from "../lib/shape.js";
+import makeShape, { convertUnits } from "../lib/shape.js";
 
 function calcScale(units) {
-    if (units === "in") {
-        return 72;
-    } else if (units === "cm") {
-        return 28.35;
-    } else {
-        return 1;
-    }
+    return convertUnits(1, units, "pt");
 }
 
 export async function get(req, res, next) {
@@ -74,7 +68,7 @@ export async function get(req, res, next) {
                 pageMargin + fullHeight / 2 - pageY * pageContentHeight
             )
                 .scale(scale)
-                .lineWidth(72 / 8 / scale);
+                .lineWidth(convertUnits(0.125, "in", units));
             for (let wall of shape.calcWalls()) {
                 doc.path(wall).stroke();
             }

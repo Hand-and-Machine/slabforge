@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+    import { convertUnits } from "../lib/shape";
     export let shape;
 
     let svg;
@@ -15,17 +16,11 @@
 
     let walls;
     $: walls = shape.calcWalls();
+    let strokeWidth;
+    $: strokeWidth = convertUnits(0.125, "in", "px") * zoom;
 
     function px2svg(pxLen, units, zoom) {
-        // on my current primary monitor, 72pt is 96px
-        let ptLen = pxLen * (72 / 96);
-        // these numbers are from https://www.w3.org/Style/Examples/007/units.en.html
-        let svgLen;
-        if (units === "in") {
-            svgLen = ptLen / 72;
-        } else if (units === "cm") {
-            svgLen = (ptLen / 72) * 2.54;
-        }
+        let svgLen = convertUnits(pxLen, "px", units);
         return svgLen / zoom;
     }
 
@@ -124,6 +119,10 @@
     on:mouseleave={handleMouseUp}
     on:wheel|preventDefault={handleScroll}>
     {#each walls as wall}
-        <path d={wall} fill="none" stroke="#000000" />
+        <path
+            d={wall}
+            fill="none"
+            stroke="#000000"
+            stroke-width={strokeWidth} />
     {/each}
 </svg>
