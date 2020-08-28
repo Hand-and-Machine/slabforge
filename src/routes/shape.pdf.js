@@ -28,7 +28,7 @@ export async function get(req, res, next) {
         units
     );
     res.setHeader("Content-Type", "application/pdf");
-    // res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
+    res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
 
     const scale = calcScale(shape.units);
     const [minPDFWidth, minPDFHeight] = shape
@@ -63,24 +63,22 @@ export async function get(req, res, next) {
         .text(`bottom width: ${bottomWidth}${units}`)
         .text(`top width: ${topWidth}${units}`);
     const shapeWalls = shape.calcWalls();
-    let labelBevelGuide = () => {};
-    // bevel guide currently doesn't exist for conics
-    if (sides !== "∞") {
-        // find the bevel guide position
-        let bevelGuidePath = shapeWalls[shapeWalls.length - 1];
-        let bevelGuidePositionMatch = /L [\-.\d]+,[\-.\d]+ ([\-.\d]+),([\-.\d]+)/.exec(
-            bevelGuidePath
-        );
-        let bevelGuideX = parseFloat(bevelGuidePositionMatch[1]);
-        let bevelGuideY = parseFloat(bevelGuidePositionMatch[2]);
+    // find the bevel guide position
+    let bevelGuidePath = shapeWalls[shapeWalls.length - 1];
+    let bevelGuidePositionMatch = /L [\-.\d]+,[\-.\d]+ ([\-.\d]+),([\-.\d]+)/.exec(
+        bevelGuidePath
+    );
+    let bevelGuideX = parseFloat(bevelGuidePositionMatch[1]);
+    let bevelGuideY = parseFloat(bevelGuidePositionMatch[2]);
 
-        doc.fontSize(16 / scale);
-        // draw a label there
-        labelBevelGuide = () =>
-            doc.text("   bevel guide", bevelGuideX, bevelGuideY, {
-                lineBreak: false,
-            });
-    }
+    doc.fontSize(16 / scale);
+    // draw a label there
+    const labelBevelGuide = () => {
+        doc.text("\n", bevelGuideX, bevelGuideY);
+        doc.text("bevel guide", {
+            lineBreak: false,
+        });
+    };
     for (let pageY = 0; pageY < heightPages; pageY++) {
         for (let pageX = 0; pageX < widthPages; pageX++) {
             doc.save();

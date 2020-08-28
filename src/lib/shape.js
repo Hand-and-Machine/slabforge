@@ -380,6 +380,7 @@ class Conic {
         p4y -= bbBottom + 1;
 
         return {
+            minCircumference,
             theta,
             innerRadius,
             outerRadius,
@@ -394,14 +395,15 @@ class Conic {
     }
 
     calcWalls() {
-        const { bottomWidth } = this;
+        const { bottomWidth, clayThickness } = this;
         const { bottomRadius, topRadius, wallLength } = this.doMath();
         const result = [];
         // Bottom is easy.
         result.push(
             `M 0,0 A ${bottomRadius} ${bottomRadius} 0 1 0 0,${bottomWidth} ${bottomRadius} ${bottomRadius} 0 1 0 0,0`
         );
-        // Wall when the radii match is easy.
+        let bevelGuideLength;
+        // Wall and bevel guide when the radii match is easy.
         if (bottomRadius === topRadius) {
             const circumference = 2 * Math.PI * bottomRadius;
             result.push(
@@ -409,9 +411,11 @@ class Conic {
                     circumference / 2
                 },-1 h ${circumference} v -${wallLength} h -${circumference} z`
             );
+            bevelGuideLength = circumference;
         } else {
             // Wall when the radii do not match is a nuisance.
             const {
+                minCircumference,
                 theta,
                 innerRadius,
                 outerRadius,
@@ -425,7 +429,22 @@ class Conic {
                 `A ${outerRadius} ${outerRadius} 0 ${bigArc} 1 ${p[3].x},${p[3].y} ` +
                 `z`;
             result.push(wallD);
+            bevelGuideLength = minCircumference;
         }
+        result.push(
+            `M ${bevelGuideLength / 2 + clayThickness / 2},${
+                bottomWidth + 1
+            } ` +
+                `L ${bevelGuideLength / 2 - clayThickness / 2},${
+                    bottomWidth + 1 + clayThickness
+                } ` +
+                `${-bevelGuideLength / 2 - clayThickness / 2},${
+                    bottomWidth + 1 + clayThickness
+                } ` +
+                `${-bevelGuideLength / 2 + clayThickness / 2},${
+                    bottomWidth + 1
+                } z`
+        );
         return result;
     }
 
