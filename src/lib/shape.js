@@ -1,9 +1,6 @@
 import { Geometry, Vector3, Face3, Color } from "three";
 
 const RED = new Color(0xff6633);
-function clayThicknessIn(targetUnits) {
-    return convertUnits(0.5, "in", targetUnits);
-}
 
 export function convertUnits(quantity, from, to) {
     let quantityPt;
@@ -35,11 +32,12 @@ export function convertUnits(quantity, from, to) {
 }
 
 class Prism {
-    constructor(sides, height, bottomWidth, topWidth, units) {
+    constructor(sides, height, bottomWidth, topWidth, clayThickness, units) {
         this.sides = sides;
         this.height = height;
         this.bottomWidth = bottomWidth;
         this.topWidth = topWidth;
+        this.clayThickness = clayThickness;
         this.units = units;
     }
 
@@ -64,7 +62,7 @@ class Prism {
     }
 
     calcWalls() {
-        const { sides, units } = this;
+        const { sides, clayThickness, units } = this;
         const { bottomRadius, topSideLen, wallLength } = this.doMath();
         const wallData = [];
         const result = [];
@@ -102,7 +100,6 @@ class Prism {
         }
 
         // calculate the bevel guide
-        const clayThickness = clayThicknessIn(units);
         const { upper1X, upper1Y, upper2X, upper2Y, midTheta } = wallData[0];
         const GUIDE_OFFSET = 1;
         const bevelGuideStartTopX = upper1X + Math.cos(midTheta) * GUIDE_OFFSET;
@@ -150,7 +147,7 @@ class Prism {
     }
 
     calc3DVertices() {
-        let { sides, height, units } = this;
+        let { sides, height, clayThickness, units } = this;
         const { bottomRadius, topRadius } = this.doMath();
         const vertices = [];
 
@@ -159,7 +156,6 @@ class Prism {
             vertices.push(new Vector3(x, y, z));
             return result;
         }
-        const clayThickness = clayThicknessIn(units);
         const halfThickness = clayThickness / 2;
         const outerBottomCenter = makeVertex(0, -halfThickness, 0);
         const innerBottomCenter = makeVertex(0, halfThickness, 0);
@@ -292,6 +288,11 @@ class Prism {
                 vertices[sideVertices[0].innerBottom],
                 vertices[sideVertices[Math.floor(sides / 2)].innerBottom]
             );
+        } else if (target === "clayThickness") {
+            geometry.vertices.push(
+                vertices[sideVertices[0].outerTop],
+                vertices[sideVertices[0].innerTop]
+            );
         } else {
             // if we let geometry.vertices be empty, this causes problems, for some reason.
             geometry.vertices.push(
@@ -306,10 +307,11 @@ class Prism {
 const CONIC_RESOLUTION = 100;
 
 class Conic {
-    constructor(height, bottomWidth, topWidth, units) {
+    constructor(height, bottomWidth, topWidth, clayThickness, units) {
         this.height = height;
         this.bottomWidth = bottomWidth;
         this.topWidth = topWidth;
+        this.clayThickness = clayThickness;
         this.units = units;
     }
 
@@ -448,35 +450,41 @@ class Conic {
         ];
     }
 
-    calc3DGeometry() {
-        const { height, bottomWidth, topWidth, units } = this;
+    getEquivalentPrism() {
+        const { height, bottomWidth, topWidth, clayThickness, units } = this;
         return new Prism(
             CONIC_RESOLUTION,
             height,
             bottomWidth,
             topWidth,
+            clayThickness,
             units
-        ).calc3DGeometry();
+        );
+    }
+
+    calc3DGeometry() {
+        return this.getEquivalentPrism().calc3DGeometry();
     }
 
     calcHighlightGeometry(target) {
-        const { height, bottomWidth, topWidth, units } = this;
-        return new Prism(
-            CONIC_RESOLUTION,
-            height,
-            bottomWidth,
-            topWidth,
-            units
-        ).calcHighlightGeometry(target);
+        return this.getEquivalentPrism().calcHighlightGeometry(target);
     }
 }
 
-export default function makeShape(sides, height, bottomWidth, topWidth, units) {
+export default function makeShape(
+    sides,
+    height,
+    bottomWidth,
+    topWidth,
+    clayThickness,
+    units
+) {
     if (sides === "∞") {
         return new Conic(
             parseFloat(height),
             parseFloat(bottomWidth),
             parseFloat(topWidth),
+            parseFloat(clayThickness),
             units
         );
     } else {
@@ -485,6 +493,7 @@ export default function makeShape(sides, height, bottomWidth, topWidth, units) {
             parseFloat(height),
             parseFloat(bottomWidth),
             parseFloat(topWidth),
+            parseFloat(clayThickness),
             units
         );
     }

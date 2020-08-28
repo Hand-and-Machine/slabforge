@@ -10,6 +10,7 @@
     let height = 5;
     let bottomWidth = 5;
     let topWidth = 5;
+    let clayThickness = 1;
     let units = "cm";
     let pageSize = "letter";
     let highlightTarget = "";
@@ -23,7 +24,14 @@
     }
 
     let shape;
-    $: shape = makeShape(sides, height, bottomWidth, topWidth, units);
+    $: shape = makeShape(
+        sides,
+        height,
+        bottomWidth,
+        topWidth,
+        clayThickness,
+        units
+    );
 
     let shapePDFQuery;
     $: {
@@ -32,6 +40,7 @@
             height,
             bottomWidth,
             topWidth,
+            clayThickness,
             units,
             pageSize,
         });
@@ -99,6 +108,15 @@
             on:mouseenter={() => (highlightTarget = 'topWidth')}
             on:mouseleave={() => (highlightTarget = '')}>
             Top Width
+        </SpinnerSliderControl>
+        <SpinnerSliderControl
+            bind:value={clayThickness}
+            min="0.1"
+            step="0.05"
+            max="1"
+            on:mouseenter={() => (highlightTarget = 'clayThickness')}
+            on:mouseleave={() => (highlightTarget = '')}>
+            Clay Thickness
         </SpinnerSliderControl>
         <RadioSelector bind:value={units} options={['in', 'cm']} />
         <fieldset>

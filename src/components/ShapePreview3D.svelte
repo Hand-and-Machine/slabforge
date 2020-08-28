@@ -16,7 +16,6 @@
     }
     const highlightGeometry = shape.calcHighlightGeometry(highlightTarget);
     $: {
-        console.log(highlightTarget);
         let g2 = shape.calcHighlightGeometry(highlightTarget);
         highlightGeometry.vertices = g2.vertices;
         highlightGeometry.verticesNeedUpdate = true;

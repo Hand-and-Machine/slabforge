@@ -15,10 +15,18 @@ export async function get(req, res, next) {
         height,
         bottomWidth,
         topWidth,
+        clayThickness,
         units,
         pageSize,
     } = Object.fromEntries(params.entries());
-    const shape = makeShape(sides, height, bottomWidth, topWidth, units);
+    const shape = makeShape(
+        sides,
+        height,
+        bottomWidth,
+        topWidth,
+        clayThickness,
+        units
+    );
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
 
