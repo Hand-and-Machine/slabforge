@@ -43,27 +43,36 @@ class Prism {
 
     doMath() {
         const { sides, height, bottomWidth, topWidth } = this;
-        const bottomRadius = bottomWidth / 2;
+        const bottomApothem = bottomWidth / 2;
+        const bottomRadius = bottomApothem / Math.cos(Math.PI / sides);
         const bottomSideLen = bottomRadius * Math.sin(Math.PI / sides) * 2;
-        const bottomApothem = bottomRadius * Math.cos(Math.PI / sides);
-        const topRadius = topWidth / 2;
+        const topApothem = topWidth / 2;
+        const topRadius = topApothem / Math.cos(Math.PI / sides);
         const topSideLen = topRadius * Math.sin(Math.PI / sides) * 2;
-        const topApothem = topRadius * Math.cos(Math.PI / sides);
         const wallLength = Math.sqrt(
             Math.pow(height, 2) + Math.pow(topApothem - bottomApothem, 2)
         );
+        const interiorAngle = (Math.PI * (sides - 2)) / sides;
+        const halfInteriorAngle = interiorAngle / 2;
+        const bevelFactor = Math.PI / 2 - halfInteriorAngle;
         return {
             bottomRadius,
             bottomSideLen,
             topRadius,
             topSideLen,
             wallLength,
+            bevelFactor,
         };
     }
 
     calcWalls() {
         const { sides, clayThickness, units } = this;
-        const { bottomRadius, topSideLen, wallLength } = this.doMath();
+        const {
+            bottomRadius,
+            topSideLen,
+            wallLength,
+            bevelFactor,
+        } = this.doMath();
         const wallData = [];
         const result = [];
         for (let k = 0; k < sides; k++) {
@@ -106,9 +115,6 @@ class Prism {
         const bevelGuideStartTopY = upper1Y + Math.sin(midTheta) * GUIDE_OFFSET;
         const bevelGuideEndTopX = upper2X + Math.cos(midTheta) * GUIDE_OFFSET;
         const bevelGuideEndTopY = upper2Y + Math.sin(midTheta) * GUIDE_OFFSET;
-        const interiorAngle = (Math.PI * (sides - 2)) / sides;
-        const halfInteriorAngle = interiorAngle / 2;
-        const bevelFactor = Math.PI / 2 - halfInteriorAngle;
         const bevelGuideStartBottomX =
             bevelGuideStartTopX +
             Math.cos(midTheta - bevelFactor) * clayThickness;
@@ -147,8 +153,8 @@ class Prism {
     }
 
     calc3DVertices() {
-        let { sides, height, clayThickness, units } = this;
-        const { bottomRadius, topRadius } = this.doMath();
+        let { sides, height, clayThickness } = this;
+        const { bottomRadius, topRadius, bevelFactor } = this.doMath();
         const vertices = [];
 
         function makeVertex(x, y, z) {
@@ -156,38 +162,40 @@ class Prism {
             vertices.push(new Vector3(x, y, z));
             return result;
         }
-        const halfThickness = clayThickness / 2;
-        const outerBottomCenter = makeVertex(0, -halfThickness, 0);
-        const innerBottomCenter = makeVertex(0, halfThickness, 0);
+        const outerBottomCenter = makeVertex(0, 0, 0);
+        const innerBottomCenter = makeVertex(0, clayThickness, 0);
         const topCenter = makeVertex(0, height, 0);
         const sideVertices = [];
+        const cornerThickness = clayThickness / Math.cos(bevelFactor) / 2;
         for (let k = 0; k < sides; k++) {
             const theta = (2 * Math.PI * k) / sides;
             const outerBottomX =
-                Math.cos(theta) * (bottomRadius + halfThickness);
+                Math.cos(theta) * (bottomRadius + cornerThickness);
             const outerBottomZ =
-                Math.sin(theta) * (bottomRadius + halfThickness);
-            const innerBottomX =
-                Math.cos(theta) * (bottomRadius - halfThickness);
-            const innerBottomZ =
-                Math.sin(theta) * (bottomRadius - halfThickness);
-            const outerTopX = Math.cos(theta) * (topRadius + halfThickness);
-            const outerTopZ = Math.sin(theta) * (topRadius + halfThickness);
-            const innerTopX = Math.cos(theta) * (topRadius - halfThickness);
-            const innerTopZ = Math.sin(theta) * (topRadius - halfThickness);
+                Math.sin(theta) * (bottomRadius + cornerThickness);
+            const innerBottomX = Math.cos(theta) * bottomRadius;
+            const innerBottomZ = Math.sin(theta) * bottomRadius;
+            const outerTopX = Math.cos(theta) * (topRadius + cornerThickness);
+            const outerTopZ = Math.sin(theta) * (topRadius + cornerThickness);
+            const innerTopX = Math.cos(theta) * topRadius;
+            const innerTopZ = Math.sin(theta) * topRadius;
             sideVertices.push({
-                outerBottom: makeVertex(
-                    outerBottomX,
-                    -halfThickness,
-                    outerBottomZ
-                ),
+                outerBottom: makeVertex(outerBottomX, 0, outerBottomZ),
                 innerBottom: makeVertex(
                     innerBottomX,
-                    halfThickness,
+                    clayThickness,
                     innerBottomZ
                 ),
-                outerTop: makeVertex(outerTopX, height, outerTopZ),
-                innerTop: makeVertex(innerTopX, height, innerTopZ),
+                outerTop: makeVertex(
+                    outerTopX,
+                    height + clayThickness,
+                    outerTopZ
+                ),
+                innerTop: makeVertex(
+                    innerTopX,
+                    height + clayThickness,
+                    innerTopZ
+                ),
             });
         }
         return {
@@ -279,20 +287,58 @@ class Prism {
                 vertices[topCenter]
             );
         } else if (target === "topWidth") {
-            geometry.vertices.push(
-                vertices[sideVertices[0].innerTop],
-                vertices[sideVertices[Math.floor(sides / 2)].innerTop]
-            );
+            // width is measured from midpoint to midpoint, not corner to corner
+            const inner0 = vertices[sideVertices[0].innerTop];
+            const inner1 = vertices[sideVertices[1].innerTop];
+            const innerStart = new Vector3().lerpVectors(inner0, inner1, 0.5);
+            let innerEnd;
+            if (sideVertices.length % 2 === 0) {
+                const half = Math.floor(sideVertices.length / 2);
+                const innerHalf = vertices[sideVertices[half].innerTop];
+                const innerHalfPlusOne =
+                    vertices[sideVertices[half + 1].innerTop];
+                innerEnd = new Vector3().lerpVectors(
+                    innerHalf,
+                    innerHalfPlusOne,
+                    0.5
+                );
+            } else {
+                // TODO find a way to fix this slight inaccuracy
+                const half = Math.ceil(sideVertices.length / 2);
+                innerEnd = vertices[sideVertices[half].innerTop];
+            }
+            geometry.vertices.push(innerStart, innerEnd);
         } else if (target === "bottomWidth") {
-            geometry.vertices.push(
-                vertices[sideVertices[0].innerBottom],
-                vertices[sideVertices[Math.floor(sides / 2)].innerBottom]
-            );
+            // width is measured from midpoint to midpoint, not corner to corner
+            const inner0 = vertices[sideVertices[0].innerBottom];
+            const inner1 = vertices[sideVertices[1].innerBottom];
+            const innerStart = new Vector3().lerpVectors(inner0, inner1, 0.5);
+            let innerEnd;
+            if (sideVertices.length % 2 === 0) {
+                const half = Math.floor(sideVertices.length / 2);
+                const innerHalf = vertices[sideVertices[half].innerBottom];
+                const innerHalfPlusOne =
+                    vertices[sideVertices[half + 1].innerBottom];
+                innerEnd = new Vector3().lerpVectors(
+                    innerHalf,
+                    innerHalfPlusOne,
+                    0.5
+                );
+            } else {
+                // TODO find a way to fix this slight inaccuracy
+                const half = Math.ceil(sideVertices.length / 2);
+                innerEnd = vertices[sideVertices[half].innerBottom];
+            }
+            geometry.vertices.push(innerStart, innerEnd);
         } else if (target === "clayThickness") {
-            geometry.vertices.push(
-                vertices[sideVertices[0].outerTop],
-                vertices[sideVertices[0].innerTop]
-            );
+            // clay thickness is measured at the center of a side, not the corner
+            const outer0 = vertices[sideVertices[0].outerTop];
+            const inner0 = vertices[sideVertices[0].innerTop];
+            const outer1 = vertices[sideVertices[1].outerTop];
+            const inner1 = vertices[sideVertices[1].innerTop];
+            const outerMid = new Vector3().lerpVectors(outer0, outer1, 0.5);
+            const innerMid = new Vector3().lerpVectors(inner0, inner1, 0.5);
+            geometry.vertices.push(outerMid, innerMid);
         } else {
             // if we let geometry.vertices be empty, this causes problems, for some reason.
             geometry.vertices.push(
@@ -398,9 +444,11 @@ class Conic {
         const { bottomWidth, clayThickness } = this;
         const { bottomRadius, topRadius, wallLength } = this.doMath();
         const result = [];
+        const outerBottomRadius = bottomRadius + clayThickness;
+        const outerBottomWidth = bottomWidth + 2 * clayThickness;
         // Bottom is easy.
         result.push(
-            `M 0,0 A ${bottomRadius} ${bottomRadius} 0 1 0 0,${bottomWidth} ${bottomRadius} ${bottomRadius} 0 1 0 0,0`
+            `M 0,0 A ${outerBottomRadius} ${outerBottomRadius} 0 1 0 0,${outerBottomWidth} ${outerBottomRadius} ${outerBottomRadius} 0 1 0 0,0`
         );
         let bevelGuideLength;
         // Wall and bevel guide when the radii match is easy.
@@ -433,16 +481,16 @@ class Conic {
         }
         result.push(
             `M ${bevelGuideLength / 2 + clayThickness / 2},${
-                bottomWidth + 1
+                outerBottomWidth + 1
             } ` +
                 `L ${bevelGuideLength / 2 - clayThickness / 2},${
-                    bottomWidth + 1 + clayThickness
+                    outerBottomWidth + 1 + clayThickness
                 } ` +
                 `${-bevelGuideLength / 2 - clayThickness / 2},${
-                    bottomWidth + 1 + clayThickness
+                    outerBottomWidth + 1 + clayThickness
                 } ` +
                 `${-bevelGuideLength / 2 + clayThickness / 2},${
-                    bottomWidth + 1
+                    outerBottomWidth + 1
                 } z`
         );
         return result;
