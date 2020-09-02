@@ -23,10 +23,21 @@
     let y;
     $: y = shape.height / 2;
 
+    let camera, renderer;
+
+    function peekDimensions() {
+        canvas.width = 0;
+        canvas.height = 0;
+        canvas.setAttribute("style", "");
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        camera.aspect = canvas.width / canvas.height;
+        camera.updateProjectionMatrix();
+    }
+
     onMount(() => {
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
         renderer.setClearColor(0xffffff, 1);
 
@@ -50,20 +61,20 @@
         scene.add(lines);
 
         camera.position.setZ(10);
+        camera.position.setY(shape.height * 1.5);
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.target = new THREE.Vector3(0, y, 0);
+
+        peekDimensions();
 
         let frame;
 
         (function loop() {
             frame = requestAnimationFrame(loop);
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight, true);
-            camera.aspect = canvas.width / canvas.height;
-            camera.updateProjectionMatrix();
             controls.target.setY(y);
             controls.update();
-            light.position.setY(y * 2.5);
+            light.position.setY(y * 3);
             renderer.render(scene, camera);
         })();
 
@@ -74,7 +85,22 @@
 </script>
 
 <style>
+    article {
+        flex: 1 0 0;
+        display: flex;
+        flex-flow: column;
+    }
 
+    h2 {
+        flex: 0;
+    }
+
+    canvas {
+        flex: 1;
+    }
 </style>
 
-<canvas width="200" height="200" bind:this={canvas} />
+<article>
+    <h2>Constructed Shape</h2>
+    <canvas width="200" height="200" bind:this={canvas} />
+</article>

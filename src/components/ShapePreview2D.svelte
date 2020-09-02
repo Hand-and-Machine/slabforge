@@ -102,27 +102,47 @@
 </script>
 
 <style>
+    article {
+        flex: 1 0 0;
+        display: flex;
+        flex-flow: column;
+    }
+
+    h2 {
+        flex: 0;
+    }
+
+    svg {
+        flex: 1;
+        background-color: white;
+    }
+
     path {
         vector-effect: non-scaling-stroke;
     }
 </style>
 
-<svg
-    bind:this={svg}
-    viewBox="{centerX - vbWidth / 2}
-    {centerY - vbHeight / 2}
-    {vbWidth}
-    {vbHeight}"
-    on:mousedown={handleMouseDown}
-    on:mousemove={handleMouseMove}
-    on:mouseup={handleMouseUp}
-    on:mouseleave={handleMouseUp}
-    on:wheel|preventDefault={handleScroll}>
-    {#each walls as wall}
-        <path
-            d={wall}
-            fill="none"
-            stroke="#000000"
-            stroke-width={strokeWidth} />
-    {/each}
-</svg>
+<svelte:window on:resize={peekSVGDimensions} />
+
+<article>
+    <h2>Printed Template</h2>
+    <svg
+        bind:this={svg}
+        viewBox="{centerX - vbWidth / 2}
+        {centerY - vbHeight / 2}
+        {vbWidth}
+        {vbHeight}"
+        on:mousedown={handleMouseDown}
+        on:mousemove={handleMouseMove}
+        on:mouseup={handleMouseUp}
+        on:mouseleave={handleMouseUp}
+        on:wheel|preventDefault={handleScroll}>
+        {#each walls as wall}
+            <path
+                d={wall}
+                fill="none"
+                stroke="#000000"
+                stroke-width={strokeWidth} />
+        {/each}
+    </svg>
+</article>
