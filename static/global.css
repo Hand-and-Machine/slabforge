@@ -413,7 +413,6 @@ a {
 
 fieldset {
     border: none;
-    padding: 0;
 }
 
 @media (min-width: 400px) {
