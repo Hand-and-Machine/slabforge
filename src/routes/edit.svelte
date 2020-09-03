@@ -10,8 +10,8 @@
     let height = 5;
     let bottomWidth = 5;
     let topWidth = 5;
-    let clayThickness = 1;
-    let units = "cm";
+    let clayThickness = 0.25;
+    let units = "in";
     let pageSize = "letter";
     let highlightTarget = "";
 
