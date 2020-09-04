@@ -33,7 +33,7 @@
         units
     );
 
-    let shapePDFQuery;
+    let shapeExportQuery;
     $: {
         const params = new URLSearchParams({
             sides,
@@ -44,7 +44,7 @@
             units,
             pageSize,
         });
-        shapePDFQuery = params.toString();
+        shapeExportQuery = params.toString();
     }
 </script>
 
@@ -128,6 +128,7 @@
                 </select>
             </label>
         </fieldset>
-        <a href="shape.pdf?{shapePDFQuery}">Download PDF</a>
+        <a href="shape.pdf?{shapeExportQuery}">Download PDF</a>
+        <a href="shape.stl?{shapeExportQuery}">Download STL</a>
     </aside>
 </article>
