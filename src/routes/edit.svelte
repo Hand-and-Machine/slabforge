@@ -1,5 +1,6 @@
 <script>
-    import makeShape from "../lib/shape.js";
+    import round from "lodash/round";
+    import makeShape, { convertUnits } from "../lib/shape.js";
     import SpinnerSliderControl from "../components/SpinnerSliderControl.svelte";
     import ShapePreview2D from "../components/ShapePreview2D.svelte";
     import ShapePreview3D from "../components/ShapePreview3D.svelte";
@@ -45,6 +46,18 @@
             pageSize,
         });
         shapeExportQuery = params.toString();
+    }
+
+    let oldUnits = units;
+    $: {
+        if (units !== oldUnits) {
+            let fixUnits = (q) => round(convertUnits(q, oldUnits, units), 1);
+            height = fixUnits(height);
+            bottomWidth = fixUnits(bottomWidth);
+            topWidth = fixUnits(topWidth);
+            clayThickness = fixUnits(clayThickness);
+            oldUnits = units;
+        }
     }
 </script>
 
