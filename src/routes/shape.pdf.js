@@ -93,7 +93,7 @@ export async function get(req, res, next) {
                 pageMargin + fullHeight / 2 - pageY * pageContentHeight
             )
                 .scale(scale)
-                .lineWidth(convertUnits(0.125, "in", units));
+                .lineWidth(convertUnits(0.05, "cm", units));
             for (let wall of shapeWalls) {
                 doc.path(wall).stroke();
             }

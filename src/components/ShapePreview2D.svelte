@@ -17,7 +17,7 @@
     let walls;
     $: walls = shape.calcWalls();
     let strokeWidth;
-    $: strokeWidth = convertUnits(0.125, "in", "px") * zoom;
+    $: strokeWidth = convertUnits(0.05, "cm", "px") * zoom;
 
     function px2svg(pxLen, units, zoom) {
         let svgLen = convertUnits(pxLen, "px", units);
