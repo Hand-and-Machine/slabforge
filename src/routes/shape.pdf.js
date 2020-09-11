@@ -243,7 +243,7 @@ export async function get(req, res, next) {
         units
     );
     res.setHeader("Content-Type", "application/pdf");
-    // res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
+    res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
 
     const scale = calcScale(shape.units);
     const [minPDFWidth, minPDFHeight] = shape
