@@ -391,7 +391,7 @@ function drawCutClayInstructions(
     doc.restore();
 }
 
-function drawAssembleInstructions(doc, startY, stepHeight, stepNumber) {
+function drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides) {
     doc.moveTo(doc.page.margins.left, convertUnits(startY, "in", "pt"))
         .lineTo(
             doc.page.width - doc.page.margins.right,
@@ -400,7 +400,11 @@ function drawAssembleInstructions(doc, startY, stepHeight, stepNumber) {
         .stroke();
 
     doc.fontSize(fontSize).text(
-        `${stepNumber}. Put it all together`,
+        `${stepNumber}. ${
+            sides === "∞"
+                ? "Put the wall together and attach it to the base"
+                : "Fold the walls upwards"
+        }`,
         doc.page.margins.left,
         convertUnits(startY + 0.1, "in", "pt")
     );
@@ -466,7 +470,7 @@ function drawInstructions(doc, sides, shape, templateSettings) {
     startY += stepHeight;
     stepNumber += 1;
 
-    drawAssembleInstructions(doc, startY, stepHeight, stepNumber);
+    drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides);
 }
 
 export async function get(req, res, next) {
@@ -482,6 +486,7 @@ export async function get(req, res, next) {
         clayThickness,
         units,
         pageSize,
+        noDownload,
     } = Object.fromEntries(params.entries());
     const shape = makeShape(
         sides,
@@ -492,7 +497,12 @@ export async function get(req, res, next) {
         units
     );
     res.setHeader("Content-Type", "application/pdf");
-    // res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
+    if (!noDownload) {
+        res.setHeader(
+            "Content-Disposition",
+            'attachment; filename="shape.pdf"'
+        );
+    }
 
     const scale = calcScale(shape.units);
     const [minPDFWidth, minPDFHeight] = shape
