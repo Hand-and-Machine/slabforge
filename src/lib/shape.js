@@ -1,4 +1,5 @@
 import { Geometry, Vector3, Face3, Color } from "three";
+import round from "lodash/round";
 
 const RED = new Color(0xff6633);
 
@@ -41,6 +42,11 @@ class Prism {
         this.units = units;
     }
 
+    get bevelAngleDegrees() {
+        let { bevelFactor } = this.doMath();
+        return round((bevelFactor / Math.PI) * 180, 2);
+    }
+
     doMath() {
         const { sides, height, bottomWidth, topWidth } = this;
         const bottomApothem = bottomWidth / 2;
@@ -73,12 +79,14 @@ class Prism {
             wallLength,
             bevelFactor,
         } = this.doMath();
+        let base = "M ";
         const wallData = [];
         const result = [];
         for (let k = 0; k < sides; k++) {
             const theta = (2 * Math.PI * k) / sides;
             const x = Math.cos(theta) * bottomRadius;
             const y = Math.sin(theta) * bottomRadius;
+            base += `${x},${y} `;
             // Hoooooooo boy, this sucks.
             // So first, we find the midpoint of this side:
             const nextTheta = (2 * Math.PI * (k + 1)) / sides;
@@ -107,6 +115,7 @@ class Prism {
             result.push(wallD);
             wallData.push({ upper1X, upper1Y, upper2X, upper2Y, midTheta });
         }
+        base += "z";
 
         // calculate the bevel guide
         const { upper1X, upper1Y, upper2X, upper2Y, midTheta } = wallData[0];
@@ -130,7 +139,7 @@ class Prism {
         result.push(
             `M ${bevelGuideStartTopX},${bevelGuideStartTopY} L ${bevelGuideStartBottomX},${bevelGuideStartBottomY} ${bevelGuideEndBottomX},${bevelGuideEndBottomY} ${bevelGuideEndTopX},${bevelGuideEndTopY} z`
         );
-        return result;
+        return [base, ...result];
     }
 
     calcPDFBounds() {

@@ -26,8 +26,15 @@ function drawTemplate(
         bevelGuideY,
         units,
     },
-    { safeX, safeY, safeWidth, safeHeight, pageX, pageY, extraScale }
+    { safeX, safeY, safeWidth, safeHeight, pageX, pageY, extraScale },
+    extraOptions = {}
 ) {
+    let { drawGuide, labelGuide, fill } = {
+        drawGuide: true,
+        labelGuide: true,
+        fill: undefined,
+        ...extraOptions,
+    };
     doc.save();
     doc.rect(safeX, safeY, safeWidth, safeHeight).clip();
     doc.translate(
@@ -36,14 +43,30 @@ function drawTemplate(
     )
         .scale(scale * extraScale)
         .lineWidth(convertUnits(0.05, "cm", units) * extraScale);
-    for (let wall of shapeWalls) {
-        doc.path(wall).stroke();
+    if (!drawGuide) {
+        shapeWalls = shapeWalls.slice(0, -1);
     }
-    labelBevelGuide(doc, scale, bevelGuideX, bevelGuideY);
+    for (let wall of shapeWalls) {
+        doc.path(wall);
+        if (fill !== undefined) {
+            doc.fill(fill);
+        } else {
+            doc.stroke();
+        }
+    }
+    if (labelGuide) {
+        labelBevelGuide(doc, scale, bevelGuideX, bevelGuideY);
+    }
     doc.restore();
 }
 
-function drawTapeInstructions(doc, startY, stepNumber, templateSettings) {
+function drawTapeInstructions(
+    doc,
+    startY,
+    stepHeight,
+    stepNumber,
+    templateSettings
+) {
     let pageMargin = doc.page.margins.top;
     let { widthPages, heightPages } = templateSettings;
 
@@ -60,13 +83,15 @@ function drawTapeInstructions(doc, startY, stepNumber, templateSettings) {
         convertUnits(startY + 0.1, "in", "pt")
     );
 
-    let miniPageHeight = convertUnits(1.2, "in", "pt") / heightPages - 2;
+    let miniPageHeight =
+        convertUnits(stepHeight - 0.3, "in", "pt") / heightPages - 2;
     let miniPageWidth = (miniPageHeight / doc.page.height) * doc.page.width;
     let miniPageMargin = (miniPageHeight / doc.page.height) * pageMargin;
 
     for (let pageY = 0; pageY < heightPages; pageY++) {
         for (let pageX = 0; pageX < widthPages; pageX++) {
-            let posX = doc.page.margins.left + 1 + pageX * (miniPageWidth + 2);
+            let posX =
+                doc.page.margins.left + 0.5 + pageX * (miniPageWidth + 2);
             let posY =
                 convertUnits(startY + 0.3, "in", "pt") +
                 pageY * (miniPageHeight + 2);
@@ -85,10 +110,14 @@ function drawTapeInstructions(doc, startY, stepNumber, templateSettings) {
 
     let arrowTailStartX =
         doc.page.margins.left +
-        1 +
+        0.5 +
         widthPages * (miniPageWidth + 2) +
         convertUnits(0.5, "in", "pt");
-    let arrowTailStartY = convertUnits(startY + 0.8, "in", "pt");
+    let arrowTailStartY = convertUnits(
+        startY + 0.05 + stepHeight / 2,
+        "in",
+        "pt"
+    );
 
     let arrowOffset = convertUnits(0.05, "in", "px");
     let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
@@ -131,7 +160,14 @@ function drawTapeInstructions(doc, startY, stepNumber, templateSettings) {
     );
 }
 
-function drawCutTemplateInstructions(doc, startY, stepNumber, sides) {
+function drawCutTemplateInstructions(
+    doc,
+    startY,
+    stepHeight,
+    stepNumber,
+    sides,
+    templateSettings
+) {
     doc.moveTo(doc.page.margins.left, convertUnits(startY, "in", "pt"))
         .lineTo(
             doc.page.width - doc.page.margins.right,
@@ -147,10 +183,79 @@ function drawCutTemplateInstructions(doc, startY, stepNumber, sides) {
         convertUnits(startY + 0.1, "in", "pt")
     );
 
-    // TODO: scissors and pieces
+    let tapedX = doc.page.margins.left + 0.5;
+    let tapedY = convertUnits(startY + 0.3, "in", "pt");
+    let tapedHeight = convertUnits(stepHeight - 0.3, "in", "pt") - 2;
+    let tapedWidth =
+        (tapedHeight / doc.page.height) *
+        doc.page.width *
+        (templateSettings.widthPages / templateSettings.heightPages);
+    let tapedMargin = (tapedHeight / doc.page.height) * doc.page.margins.top;
+    doc.rect(tapedX, tapedY, tapedWidth, tapedHeight).stroke();
+    drawTemplate(
+        doc,
+        { ...templateSettings, widthPages: 1, heightPages: 1 },
+        {
+            safeX: tapedX + tapedMargin,
+            safeY: tapedY + tapedMargin,
+            safeWidth: tapedWidth - 2 * tapedMargin,
+            safeHeight: tapedHeight - 2 * tapedMargin,
+            pageX: 0,
+            pageY: 0,
+            extraScale:
+                tapedHeight / templateSettings.heightPages / doc.page.height,
+        }
+    );
+
+    let arrowTailStartX = tapedX + tapedWidth + convertUnits(0.5, "in", "pt");
+    let arrowTailStartY = convertUnits(
+        startY + 0.05 + stepHeight / 2,
+        "in",
+        "pt"
+    );
+
+    let arrowOffset = convertUnits(0.05, "in", "px");
+    let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
+    let arrowTailEndY = arrowTailStartY + 2 * arrowOffset;
+
+    doc.moveTo(arrowTailStartX, arrowTailStartY)
+        .lineTo(arrowTailEndX, arrowTailStartY)
+        .stroke();
+    doc.moveTo(arrowTailStartX, arrowTailEndY)
+        .lineTo(arrowTailEndX, arrowTailEndY)
+        .stroke();
+
+    doc.moveTo(arrowTailEndX - arrowOffset, arrowTailStartY - arrowOffset)
+        .lineTo(arrowTailEndX + arrowOffset, arrowTailStartY + arrowOffset)
+        .lineTo(arrowTailEndX - arrowOffset, arrowTailEndY + arrowOffset)
+        .stroke();
+
+    drawTemplate(
+        doc,
+        { ...templateSettings, widthPages: 1, heightPages: 1 },
+        {
+            safeX: arrowTailEndX + convertUnits(0.5, "in", "pt"),
+            safeY: tapedY + tapedMargin,
+            safeWidth: tapedWidth - 2 * tapedMargin,
+            safeHeight: tapedHeight - 2 * tapedMargin,
+            pageX: 0,
+            pageY: 0,
+            extraScale:
+                tapedHeight / templateSettings.heightPages / doc.page.height,
+        },
+        { labelGuide: false }
+    );
 }
 
-function drawCutClayInstructions(doc, startY, stepNumber, sides) {
+function drawCutClayInstructions(
+    doc,
+    startY,
+    stepHeight,
+    stepNumber,
+    sides,
+    shape,
+    templateSettings
+) {
     doc.moveTo(doc.page.margins.left, convertUnits(startY, "in", "pt"))
         .lineTo(
             doc.page.width - doc.page.margins.right,
@@ -158,18 +263,135 @@ function drawCutClayInstructions(doc, startY, stepNumber, sides) {
         )
         .stroke();
 
+    const bevelAngleDegrees = shape.bevelAngleDegrees || 45;
     doc.fontSize(fontSize).text(
         `${stepNumber}. Cut ${
             sides === "∞" ? "those pieces" : "that piece"
-        } out of your clay`,
+        } out of your clay, using the bevel guide to help bevel at a ${bevelAngleDegrees}° angle`,
         doc.page.margins.left,
         convertUnits(startY + 0.1, "in", "pt")
     );
 
-    // TODO: clay and bevel guide
+    let tapedX = doc.page.margins.left + 0.5;
+    let tapedY = convertUnits(startY + 0.3, "in", "pt");
+    let tapedHeight = convertUnits(stepHeight - 0.3, "in", "pt") - 2;
+    let tapedWidth =
+        (tapedHeight / doc.page.height) *
+        doc.page.width *
+        (templateSettings.widthPages / templateSettings.heightPages);
+    let tapedMargin = (tapedHeight / doc.page.height) * doc.page.margins.top;
+
+    drawTemplate(
+        doc,
+        { ...templateSettings, widthPages: 1, heightPages: 1 },
+        {
+            safeX: tapedX + tapedMargin,
+            safeY: tapedY + tapedMargin,
+            safeWidth: tapedWidth - 2 * tapedMargin,
+            safeHeight: tapedHeight - 2 * tapedMargin,
+            pageX: 0,
+            pageY: 0,
+            extraScale:
+                tapedHeight / templateSettings.heightPages / doc.page.height,
+        },
+        { drawGuide: false, labelGuide: false }
+    );
+
+    let arrowTailStartX = tapedX + tapedWidth + convertUnits(0.5, "in", "pt");
+    let arrowTailStartY = convertUnits(
+        startY + 0.05 + stepHeight / 2,
+        "in",
+        "pt"
+    );
+
+    let arrowOffset = convertUnits(0.05, "in", "px");
+    let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
+    let arrowTailEndY = arrowTailStartY + 2 * arrowOffset;
+
+    doc.moveTo(arrowTailStartX, arrowTailStartY)
+        .lineTo(arrowTailEndX, arrowTailStartY)
+        .stroke();
+    doc.moveTo(arrowTailStartX, arrowTailEndY)
+        .lineTo(arrowTailEndX, arrowTailEndY)
+        .stroke();
+
+    doc.moveTo(arrowTailEndX - arrowOffset, arrowTailStartY - arrowOffset)
+        .lineTo(arrowTailEndX + arrowOffset, arrowTailStartY + arrowOffset)
+        .lineTo(arrowTailEndX - arrowOffset, arrowTailEndY + arrowOffset)
+        .stroke();
+
+    drawTemplate(
+        doc,
+        { ...templateSettings, widthPages: 1, heightPages: 1 },
+        {
+            safeX: arrowTailEndX + convertUnits(0.5, "in", "pt"),
+            safeY: tapedY + tapedMargin,
+            safeWidth: tapedWidth - 2 * tapedMargin,
+            safeHeight: tapedHeight - 2 * tapedMargin,
+            pageX: 0,
+            pageY: 0,
+            extraScale:
+                tapedHeight / templateSettings.heightPages / doc.page.height,
+        },
+        { drawGuide: false, labelGuide: false, fill: "#e2725b" }
+    );
+
+    // here's hoping this works
+    let sideViewTopLeftX =
+        arrowTailEndX + convertUnits(0.5, "in", "pt") + tapedWidth;
+    let sideViewTopY = arrowTailStartY;
+    let sideViewBottomY = arrowTailEndY;
+    let sideViewHeight = sideViewBottomY - sideViewTopY;
+
+    let sideViewBottomDelta =
+        sideViewHeight * Math.tan((bevelAngleDegrees / 180) * Math.PI);
+    let sideViewBottomLeftX = sideViewTopLeftX - sideViewBottomDelta;
+
+    let sideViewMidLeftX = sideViewTopLeftX + convertUnits(0.25, "in", "pt");
+    let sideViewMidRightX = sideViewMidLeftX + convertUnits(0.25, "in", "pt");
+    let sideViewTopRightX = sideViewMidRightX + convertUnits(0.25, "in", "pt");
+    let sideViewBottomRightX = sideViewTopRightX + sideViewBottomDelta;
+    if (sides === "∞") {
+        sideViewBottomRightX = sideViewTopRightX - sideViewBottomDelta;
+    }
+
+    doc.save();
+    doc.moveTo(sideViewMidLeftX, sideViewBottomY)
+        .lineTo(sideViewBottomLeftX, sideViewBottomY)
+        .lineTo(sideViewTopLeftX, sideViewTopY)
+        .lineTo(sideViewMidLeftX, sideViewTopY)
+        .fillAndStroke("#e2725b", "black");
+
+    doc.moveTo(sideViewTopLeftX, sideViewBottomY)
+        .lineTo(sideViewTopLeftX, sideViewTopY)
+        .dash(1)
+        .stroke()
+        .undash();
+
+    doc.save();
+    doc.moveTo(sideViewMidLeftX, sideViewBottomY)
+        .lineTo(sideViewMidRightX, sideViewBottomY)
+        .moveTo(sideViewMidLeftX, sideViewTopY)
+        .lineTo(sideViewMidRightX, sideViewTopY)
+        .dash(2)
+        .fillAndStroke();
+    doc.restore();
+
+    doc.moveTo(sideViewMidRightX, sideViewBottomY)
+        .lineTo(sideViewBottomRightX, sideViewBottomY)
+        .lineTo(sideViewTopRightX, sideViewTopY)
+        .lineTo(sideViewMidRightX, sideViewTopY)
+        .fillAndStroke();
+
+    doc.moveTo(sideViewTopRightX, sideViewBottomY)
+        .lineTo(sideViewTopRightX, sideViewTopY)
+        .dash(1)
+        .stroke();
+
+    doc.restore();
 }
 
-function drawAssembleInstructions(doc, startY, stepNumber) {
+function drawAssembleInstructions(doc, startY, stepHeight, stepNumber) {
     doc.moveTo(doc.page.margins.left, convertUnits(startY, "in", "pt"))
         .lineTo(
             doc.page.width - doc.page.margins.right,
@@ -187,7 +409,7 @@ function drawAssembleInstructions(doc, startY, stepNumber) {
 }
 
 function drawInstructions(doc, sides, shape, templateSettings) {
-    let { height, bottomWidth, topWidth, units } = shape;
+    let { height, bottomWidth, topWidth, clayThickness, units } = shape;
     let { widthPages, heightPages } = templateSettings;
 
     doc.fontSize(fontSize);
@@ -198,26 +420,53 @@ function drawInstructions(doc, sides, shape, templateSettings) {
     }
     doc.text(`height: ${height}${units}`)
         .text(`bottom width: ${bottomWidth}${units}`)
-        .text(`top width: ${topWidth}${units}`);
+        .text(`top width: ${topWidth}${units}`)
+        .text(`clay thickness: ${clayThickness}${units}`);
 
-    let startY = 1.5;
+    let startY = 1.8;
     let stepNumber = 1;
+    let stepCount = widthPages * heightPages > 1 ? 4 : 3;
+    let stepHeight =
+        (convertUnits(doc.page.height - doc.page.margins.bottom, "pt", "in") -
+            startY) /
+        stepCount;
 
     if (widthPages * heightPages > 1) {
-        drawTapeInstructions(doc, startY, stepNumber, templateSettings);
-        startY += 1.5;
+        drawTapeInstructions(
+            doc,
+            startY,
+            stepHeight,
+            stepNumber,
+            templateSettings
+        );
+        startY += stepHeight;
         stepNumber += 1;
     }
 
-    drawCutTemplateInstructions(doc, startY, stepNumber, sides);
-    startY += 1.5;
+    drawCutTemplateInstructions(
+        doc,
+        startY,
+        stepHeight,
+        stepNumber,
+        sides,
+        templateSettings
+    );
+    startY += stepHeight;
     stepNumber += 1;
 
-    drawCutClayInstructions(doc, startY, stepNumber, sides);
-    startY += 1.5;
+    drawCutClayInstructions(
+        doc,
+        startY,
+        stepHeight,
+        stepNumber,
+        sides,
+        shape,
+        templateSettings
+    );
+    startY += stepHeight;
     stepNumber += 1;
 
-    drawAssembleInstructions(doc, startY, stepNumber);
+    drawAssembleInstructions(doc, startY, stepHeight, stepNumber);
 }
 
 export async function get(req, res, next) {
@@ -243,7 +492,7 @@ export async function get(req, res, next) {
         units
     );
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
+    // res.setHeader("Content-Disposition", 'attachment; filename="shape.pdf"');
 
     const scale = calcScale(shape.units);
     const [minPDFWidth, minPDFHeight] = shape
