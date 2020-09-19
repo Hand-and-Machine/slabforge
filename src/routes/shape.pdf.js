@@ -313,7 +313,6 @@ function drawCutClayInstructions(
         { drawGuide: false, labelGuide: false, fill: "#e2725b" }
     );
 
-    // here's hoping this works
     let sideViewTopLeftX =
         arrowTailEndX + convertUnits(0.5, "in", "pt") + tapedWidth;
     let sideViewTopY = arrowTailStartY;
@@ -366,6 +365,12 @@ function drawCutClayInstructions(
         .stroke();
 
     doc.restore();
+
+    doc.fontSize(fontSize * 0.75).text(
+        "(side view of walls)",
+        sideViewBottomLeftX,
+        sideViewBottomY + 2
+    );
 }
 
 function drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides) {
