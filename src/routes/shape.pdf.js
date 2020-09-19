@@ -60,6 +60,25 @@ function drawTemplate(
     doc.restore();
 }
 
+function drawArrow(doc, arrowTailStartX, arrowTailStartY) {
+    let arrowOffset = convertUnits(0.05, "in", "px");
+    let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
+    let arrowTailEndY = arrowTailStartY + 2 * arrowOffset;
+
+    doc.moveTo(arrowTailStartX, arrowTailStartY)
+        .lineTo(arrowTailEndX, arrowTailStartY)
+        .stroke();
+    doc.moveTo(arrowTailStartX, arrowTailEndY)
+        .lineTo(arrowTailEndX, arrowTailEndY)
+        .stroke();
+
+    doc.moveTo(arrowTailEndX - arrowOffset, arrowTailStartY - arrowOffset)
+        .lineTo(arrowTailEndX + arrowOffset, arrowTailStartY + arrowOffset)
+        .lineTo(arrowTailEndX - arrowOffset, arrowTailEndY + arrowOffset)
+        .stroke();
+    return arrowTailEndX;
+}
+
 function drawTapeInstructions(
     doc,
     startY,
@@ -119,21 +138,7 @@ function drawTapeInstructions(
         "pt"
     );
 
-    let arrowOffset = convertUnits(0.05, "in", "px");
-    let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
-    let arrowTailEndY = arrowTailStartY + 2 * arrowOffset;
-
-    doc.moveTo(arrowTailStartX, arrowTailStartY)
-        .lineTo(arrowTailEndX, arrowTailStartY)
-        .stroke();
-    doc.moveTo(arrowTailStartX, arrowTailEndY)
-        .lineTo(arrowTailEndX, arrowTailEndY)
-        .stroke();
-
-    doc.moveTo(arrowTailEndX - arrowOffset, arrowTailStartY - arrowOffset)
-        .lineTo(arrowTailEndX + arrowOffset, arrowTailStartY + arrowOffset)
-        .lineTo(arrowTailEndX - arrowOffset, arrowTailEndY + arrowOffset)
-        .stroke();
+    let arrowTailEndX = drawArrow(doc, arrowTailStartX, arrowTailStartY);
 
     let tapedStartX = arrowTailEndX + convertUnits(0.5, "in", "pt");
     let tapedStartY = convertUnits(startY + 0.3, "in", "pt");
@@ -214,21 +219,7 @@ function drawCutTemplateInstructions(
         "pt"
     );
 
-    let arrowOffset = convertUnits(0.05, "in", "px");
-    let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
-    let arrowTailEndY = arrowTailStartY + 2 * arrowOffset;
-
-    doc.moveTo(arrowTailStartX, arrowTailStartY)
-        .lineTo(arrowTailEndX, arrowTailStartY)
-        .stroke();
-    doc.moveTo(arrowTailStartX, arrowTailEndY)
-        .lineTo(arrowTailEndX, arrowTailEndY)
-        .stroke();
-
-    doc.moveTo(arrowTailEndX - arrowOffset, arrowTailStartY - arrowOffset)
-        .lineTo(arrowTailEndX + arrowOffset, arrowTailStartY + arrowOffset)
-        .lineTo(arrowTailEndX - arrowOffset, arrowTailEndY + arrowOffset)
-        .stroke();
+    let arrowTailEndX = drawArrow(doc, arrowTailStartX, arrowTailStartY);
 
     drawTemplate(
         doc,
@@ -304,21 +295,7 @@ function drawCutClayInstructions(
         "pt"
     );
 
-    let arrowOffset = convertUnits(0.05, "in", "px");
-    let arrowTailEndX = arrowTailStartX + convertUnits(0.5, "in", "pt");
-    let arrowTailEndY = arrowTailStartY + 2 * arrowOffset;
-
-    doc.moveTo(arrowTailStartX, arrowTailStartY)
-        .lineTo(arrowTailEndX, arrowTailStartY)
-        .stroke();
-    doc.moveTo(arrowTailStartX, arrowTailEndY)
-        .lineTo(arrowTailEndX, arrowTailEndY)
-        .stroke();
-
-    doc.moveTo(arrowTailEndX - arrowOffset, arrowTailStartY - arrowOffset)
-        .lineTo(arrowTailEndX + arrowOffset, arrowTailStartY + arrowOffset)
-        .lineTo(arrowTailEndX - arrowOffset, arrowTailEndY + arrowOffset)
-        .stroke();
+    let arrowTailEndX = drawArrow(doc, arrowTailStartX, arrowTailStartY);
 
     drawTemplate(
         doc,
@@ -340,7 +317,7 @@ function drawCutClayInstructions(
     let sideViewTopLeftX =
         arrowTailEndX + convertUnits(0.5, "in", "pt") + tapedWidth;
     let sideViewTopY = arrowTailStartY;
-    let sideViewBottomY = arrowTailEndY;
+    let sideViewBottomY = arrowTailStartY + convertUnits(0.1, "in", "pt");
     let sideViewHeight = sideViewBottomY - sideViewTopY;
 
     let sideViewBottomDelta =
@@ -417,6 +394,7 @@ function drawInstructions(doc, sides, shape, templateSettings) {
     let { widthPages, heightPages } = templateSettings;
 
     doc.fontSize(fontSize);
+    doc.text("Slabforge");
     if (sides === "∞") {
         doc.text("circle");
     } else {
