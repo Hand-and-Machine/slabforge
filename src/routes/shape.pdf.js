@@ -22,6 +22,7 @@ function drawTemplate(
         heightPages,
         scale,
         shapeWalls,
+        shapeCreases,
         bevelGuideX,
         bevelGuideY,
         units,
@@ -53,6 +54,12 @@ function drawTemplate(
         } else {
             doc.stroke();
         }
+    }
+    for (let crease of shapeCreases) {
+        doc.path(crease)
+            .dash(3 / (scale * extraScale))
+            .stroke()
+            .undash();
     }
     if (labelGuide) {
         labelBevelGuide(doc, scale, bevelGuideX, bevelGuideY);
@@ -509,6 +516,7 @@ export async function get(req, res, next) {
     const heightPages = Math.ceil(minPDFHeight / pageContentHeight);
 
     const shapeWalls = shape.calcWalls();
+    const shapeCreases = shape.calcCreaseMarkers();
 
     // find the bevel guide position
     let bevelGuidePath = shapeWalls[shapeWalls.length - 1];
@@ -523,6 +531,7 @@ export async function get(req, res, next) {
         heightPages,
         scale,
         shapeWalls,
+        shapeCreases,
         bevelGuideX,
         bevelGuideY,
         units,

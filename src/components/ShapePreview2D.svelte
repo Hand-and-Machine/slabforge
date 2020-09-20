@@ -16,6 +16,8 @@
 
     let walls;
     $: walls = shape.calcWalls();
+    let creases;
+    $: creases = shape.calcCreaseMarkers();
     let strokeWidth;
     $: strokeWidth = convertUnits(0.05, "cm", "px") * zoom;
 
@@ -143,6 +145,14 @@
                 fill="none"
                 stroke="#000000"
                 stroke-width={strokeWidth} />
+        {/each}
+        {#each creases as crease}
+            <path
+                d={crease}
+                fill="none"
+                stroke="#000000"
+                stroke-width={strokeWidth}
+                stroke-dasharray="3" />
         {/each}
     </svg>
 </article>

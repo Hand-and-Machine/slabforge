@@ -72,7 +72,7 @@ class Prism {
     }
 
     calcWalls() {
-        const { sides, clayThickness, units } = this;
+        const { sides, clayThickness } = this;
         const {
             bottomRadius,
             topSideLen,
@@ -86,7 +86,6 @@ class Prism {
             const theta = (2 * Math.PI * k) / sides;
             const x = Math.cos(theta) * bottomRadius;
             const y = Math.sin(theta) * bottomRadius;
-            base += `${x},${y} `;
             // Hoooooooo boy, this sucks.
             // So first, we find the midpoint of this side:
             const nextTheta = (2 * Math.PI * (k + 1)) / sides;
@@ -111,8 +110,7 @@ class Prism {
             const upper2Y =
                 upperMidY + (Math.sin(perpMidTheta) * topSideLen) / 2;
             // Then, at long last, we glue it all together:
-            let wallD = `M ${x},${y} L ${upper1X},${upper1Y} ${upper2X},${upper2Y} ${nextX},${nextY} z`;
-            result.push(wallD);
+            base += `${x},${y} ${upper1X},${upper1Y} ${upper2X},${upper2Y} `;
             wallData.push({ upper1X, upper1Y, upper2X, upper2Y, midTheta });
         }
         base += "z";
@@ -140,6 +138,19 @@ class Prism {
             `M ${bevelGuideStartTopX},${bevelGuideStartTopY} L ${bevelGuideStartBottomX},${bevelGuideStartBottomY} ${bevelGuideEndBottomX},${bevelGuideEndBottomY} ${bevelGuideEndTopX},${bevelGuideEndTopY} z`
         );
         return [base, ...result];
+    }
+
+    calcCreaseMarkers() {
+        const { sides } = this;
+        const { bottomRadius } = this.doMath();
+        let result = "M ";
+        for (let k = 0; k < sides; k++) {
+            const theta = (2 * Math.PI * k) / sides;
+            const x = Math.cos(theta) * bottomRadius;
+            const y = Math.sin(theta) * bottomRadius;
+            result += `${x},${y} `;
+        }
+        return [result + "z"];
     }
 
     calcPDFBounds() {
@@ -503,6 +514,10 @@ class Conic {
                 } z`
         );
         return result;
+    }
+
+    calcCreaseMarkers() {
+        return [];
     }
 
     calcPDFBounds() {
