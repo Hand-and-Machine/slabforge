@@ -23,6 +23,7 @@ function drawTemplate(
         scale,
         shapeWalls,
         shapeCreases,
+        shapeBevelMarkers,
         bevelGuideX,
         bevelGuideY,
         units,
@@ -30,10 +31,11 @@ function drawTemplate(
     { safeX, safeY, safeWidth, safeHeight, pageX, pageY, extraScale },
     extraOptions = {}
 ) {
-    let { drawGuide, labelGuide, fill } = {
+    let { drawGuide, labelGuide, fill, markBevels } = {
         drawGuide: true,
         labelGuide: true,
         fill: undefined,
+        markBevels: false,
         ...extraOptions,
     };
     doc.save();
@@ -55,11 +57,22 @@ function drawTemplate(
             doc.stroke();
         }
     }
-    for (let crease of shapeCreases) {
-        doc.path(crease)
-            .dash(3 / (scale * extraScale))
-            .stroke()
-            .undash();
+    if (markBevels) {
+        doc.save().lineWidth(convertUnits(2, "cm", units) * extraScale);
+        for (let marker of shapeBevelMarkers) {
+            doc.path(marker)
+                .dash(0.5 / (scale * extraScale))
+                .stroke()
+                .undash();
+        }
+        doc.restore();
+    } else {
+        for (let crease of shapeCreases) {
+            doc.path(crease)
+                .dash(3 / (scale * extraScale))
+                .stroke()
+                .undash();
+        }
     }
     if (labelGuide) {
         labelBevelGuide(doc, scale, bevelGuideX, bevelGuideY);
@@ -265,7 +278,7 @@ function drawCutClayInstructions(
     doc.fontSize(fontSize).text(
         `${stepNumber}. Cut ${
             sides === "∞" ? "those pieces" : "that piece"
-        } out of your clay, using the bevel guide to help bevel at a ${bevelAngleDegrees}° angle`,
+        } out of your clay, using the bevel guide to help bevel the dotted edges at a ${bevelAngleDegrees}° angle`,
         doc.page.margins.left,
         convertUnits(startY + 0.1, "in", "pt")
     );
@@ -317,7 +330,12 @@ function drawCutClayInstructions(
             extraScale:
                 tapedHeight / templateSettings.heightPages / doc.page.height,
         },
-        { drawGuide: false, labelGuide: false, fill: "#e2725b" }
+        {
+            drawGuide: false,
+            labelGuide: false,
+            fill: "#e2725b",
+            markBevels: true,
+        }
     );
 
     let sideViewTopLeftX =
@@ -517,6 +535,7 @@ export async function get(req, res, next) {
 
     const shapeWalls = shape.calcWalls();
     const shapeCreases = shape.calcCreaseMarkers();
+    const shapeBevelMarkers = shape.calcBevelMarkers();
 
     // find the bevel guide position
     let bevelGuidePath = shapeWalls[shapeWalls.length - 1];
@@ -532,6 +551,7 @@ export async function get(req, res, next) {
         scale,
         shapeWalls,
         shapeCreases,
+        shapeBevelMarkers,
         bevelGuideX,
         bevelGuideY,
         units,

@@ -153,6 +153,44 @@ class Prism {
         return [result + "z"];
     }
 
+    calcBevelMarkers() {
+        const { sides } = this;
+        const { bottomRadius, topSideLen, wallLength } = this.doMath();
+        let base = "M ";
+        for (let k = 0; k < sides; k++) {
+            const theta = (2 * Math.PI * k) / sides;
+            const x = Math.cos(theta) * bottomRadius;
+            const y = Math.sin(theta) * bottomRadius;
+            // Hoooooooo boy, this sucks.
+            // So first, we find the midpoint of this side:
+            const nextTheta = (2 * Math.PI * (k + 1)) / sides;
+            const nextX = Math.cos(nextTheta) * bottomRadius;
+            const nextY = Math.sin(nextTheta) * bottomRadius;
+            const lowerMidX = (x + nextX) / 2;
+            const lowerMidY = (y + nextY) / 2;
+            // Then, we find the angle from the center to that midpoint:
+            const midTheta = (theta + nextTheta) / 2;
+            // Then, we extend along that angle from that midpoint at a distance of height:
+            const upperMidX = lowerMidX + Math.cos(midTheta) * wallLength;
+            const upperMidY = lowerMidY + Math.sin(midTheta) * wallLength;
+            // Then, we go perpendicular to that angle, at a distance upperSideLength/2:
+            const perpMidTheta = midTheta + Math.PI / 2;
+            const upper1X =
+                upperMidX - (Math.cos(perpMidTheta) * topSideLen) / 2;
+            const upper1Y =
+                upperMidY - (Math.sin(perpMidTheta) * topSideLen) / 2;
+            // Then, we go the other direction perpendicular, same distance:
+            const upper2X =
+                upperMidX + (Math.cos(perpMidTheta) * topSideLen) / 2;
+            const upper2Y =
+                upperMidY + (Math.sin(perpMidTheta) * topSideLen) / 2;
+            // Then, at long last, we glue it all together:
+            base += `${x},${y} L ${upper1X},${upper1Y} M ${upper2X},${upper2Y} `;
+        }
+        base += `L ${bottomRadius},0`;
+        return [base];
+    }
+
     calcPDFBounds() {
         const walls = this.calcWalls();
         const xs = [];
@@ -518,6 +556,30 @@ class Conic {
 
     calcCreaseMarkers() {
         return [];
+    }
+
+    calcBevelMarkers() {
+        const { bottomRadius, topRadius, wallLength } = this.doMath();
+        const result = [];
+        // Wall and bevel guide when the radii match is easy.
+        if (bottomRadius === topRadius) {
+            const circumference = 2 * Math.PI * bottomRadius;
+            result.push(
+                `M -${circumference / 2},-1 v -${wallLength} M ${
+                    circumference / 2
+                },-1 v -${wallLength}`
+            );
+        } else {
+            // Wall when the radii do not match is a nuisance.
+            const { p } = this.doAnnulusSectorMath();
+            const wallD =
+                `M ${p[1].x},${p[1].y} ` +
+                `L ${p[2].x},${p[2].y} ` +
+                `M ${p[3].x},${p[3].y} ` +
+                `L ${p[0].x},${p[0].y} `;
+            result.push(wallD);
+        }
+        return result;
     }
 
     calcPDFBounds() {
