@@ -565,6 +565,13 @@ export async function get(req, res, next) {
     // actual template
     for (let pageY = 0; pageY < heightPages; pageY++) {
         for (let pageX = 0; pageX < widthPages; pageX++) {
+            doc.rect(
+                pageMargin,
+                pageMargin,
+                pageContentWidth,
+                pageContentHeight
+            ).stroke("#AAA");
+            doc.strokeColor("black");
             drawTemplate(doc, templateSettings, {
                 safeX: pageMargin,
                 safeY: pageMargin,
