@@ -511,9 +511,11 @@ export async function get(req, res, next) {
     );
     res.setHeader("Content-Type", "application/pdf");
     if (!noDownload) {
+        const type = sides === "∞" ? "circle" : "prism-" + sides;
+        const filename = `slabforge-${type}-${height}-${bottomWidth}-${topWidth}-${clayThickness}-${units}.pdf`;
         res.setHeader(
             "Content-Disposition",
-            'attachment; filename="shape.pdf"'
+            `attachment; filename="${filename}"`
         );
     }
 

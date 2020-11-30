@@ -35,7 +35,9 @@ export async function get(req, res, next) {
         units
     );
     res.setHeader("Content-Type", "model/x.stl-binary");
-    res.setHeader("Content-Disposition", 'attachment; filename="shape.stl"');
+    const type = sides === "∞" ? "circle" : "prism-" + sides;
+    const filename = `slabforge-${type}-${height}-${bottomWidth}-${topWidth}-${clayThickness}-${units}.stl`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     const geometry = shape.calc3DGeometry();
     const headerBytes = 80 + 4;
