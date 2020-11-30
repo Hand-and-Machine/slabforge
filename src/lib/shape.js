@@ -204,10 +204,12 @@ class Prism {
                 ys.push(parseFloat(y));
             }
         }
-        return [
-            Math.max(...xs) - Math.min(...xs),
-            Math.max(...ys) - Math.min(...ys),
-        ];
+        return {
+            top: Math.min(...ys),
+            bottom: Math.max(...ys),
+            left: Math.min(...xs),
+            right: Math.max(...xs),
+        };
     }
 
     calc3DVertices() {
@@ -583,10 +585,11 @@ class Conic {
     }
 
     calcPDFBounds() {
-        const { bottomWidth } = this;
+        const { bottomWidth, clayThickness } = this;
         const { bottomRadius, topRadius, wallLength } = this.doMath();
+        const outerBottomWidth = bottomWidth + 2 * clayThickness;
         const xs = [0];
-        const ys = [0, bottomWidth];
+        const ys = [0, bottomWidth, outerBottomWidth + 1 + clayThickness];
         if (bottomRadius === topRadius) {
             const circumference = 2 * Math.PI * bottomRadius;
             xs.push(-circumference / 2, circumference / 2);
@@ -597,10 +600,12 @@ class Conic {
             ys.push(...p.map((a) => a.y));
             ys.push(bbTop);
         }
-        return [
-            Math.max(...xs) - Math.min(...xs),
-            Math.max(...ys) - Math.min(...ys),
-        ];
+        return {
+            top: Math.min(...ys),
+            bottom: Math.max(...ys),
+            left: Math.min(...xs),
+            right: Math.max(...xs),
+        };
     }
 
     getEquivalentPrism() {

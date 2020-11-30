@@ -27,6 +27,7 @@ function drawTemplate(
         bevelGuideX,
         bevelGuideY,
         units,
+        bounds,
     },
     { safeX, safeY, safeWidth, safeHeight, pageX, pageY, extraScale },
     extraOptions = {}
@@ -45,6 +46,10 @@ function drawTemplate(
         safeY + (heightPages * safeHeight) / 2 - pageY * safeHeight
     )
         .scale(scale * extraScale)
+        .translate(
+            -(bounds.left + bounds.right) / 2,
+            -(bounds.top + bounds.bottom) / 2
+        )
         .lineWidth(convertUnits(0.05, "cm", units) * extraScale);
     if (!drawGuide) {
         shapeWalls = shapeWalls.slice(0, -1);
@@ -513,9 +518,15 @@ export async function get(req, res, next) {
     }
 
     const scale = calcScale(shape.units);
-    const [minPDFWidth, minPDFHeight] = shape
-        .calcPDFBounds()
-        .map((x) => x * scale);
+    const shapeBounds = shape.calcPDFBounds();
+    const bounds = {
+        left: shapeBounds.left * scale,
+        right: shapeBounds.right * scale,
+        top: shapeBounds.top * scale,
+        bottom: shapeBounds.bottom * scale,
+    };
+    const minPDFWidth = bounds.right - bounds.left;
+    const minPDFHeight = bounds.bottom - bounds.top;
 
     if (pageSize === "auto") {
         pageSize = [minPDFWidth + 72, minPDFHeight + 72];
@@ -555,6 +566,7 @@ export async function get(req, res, next) {
         bevelGuideX,
         bevelGuideY,
         units,
+        bounds: shapeBounds,
     };
 
     // instructions page
