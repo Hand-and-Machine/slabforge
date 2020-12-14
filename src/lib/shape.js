@@ -224,7 +224,7 @@ class Prism {
         }
         const outerBottomCenter = makeVertex(0, 0, 0);
         const innerBottomCenter = makeVertex(0, clayThickness, 0);
-        const topCenter = makeVertex(0, height, 0);
+        const topCenter = makeVertex(0, height + clayThickness, 0);
         const sideVertices = [];
         const cornerThickness = clayThickness / Math.cos(bevelFactor) / 2;
         for (let k = 0; k < sides; k++) {
