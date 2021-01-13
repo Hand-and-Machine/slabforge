@@ -143,5 +143,6 @@
         </fieldset>
         <a href="shape.pdf?{shapeExportQuery}">Download PDF</a>
         <a href="shape.stl?{shapeExportQuery}">Download STL</a>
+        <a href="slump-mold.stl?{shapeExportQuery}">Download Slump Mold</a>
     </aside>
 </article>
