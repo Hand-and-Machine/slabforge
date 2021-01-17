@@ -12,6 +12,7 @@
     let bottomWidth = 5;
     let topWidth = 5;
     let clayThickness = 0.25;
+    let seamMode = "sides";
     let units = "in";
     let pageSize = "letter";
     let highlightTarget = "";
@@ -22,6 +23,9 @@
         } else if (sidesSelection === "circle" && sides !== "∞") {
             sides = "∞";
         }
+        if (sidesSelection === "circle" && seamMode === "sides") {
+            seamMode = "base";
+        }
     }
 
     let shape;
@@ -31,6 +35,7 @@
         bottomWidth,
         topWidth,
         clayThickness,
+        seamMode,
         units
     );
 
@@ -42,6 +47,7 @@
             bottomWidth,
             topWidth,
             clayThickness,
+            seamMode,
             units,
             pageSize,
         });
@@ -131,6 +137,9 @@
             on:mouseleave={() => (highlightTarget = '')}>
             Clay Thickness
         </SpinnerSliderControl>
+        <RadioSelector bind:value={seamMode} options={['sides', 'base']}>
+            Seam
+        </RadioSelector>
         <RadioSelector bind:value={units} options={['in', 'cm']} />
         <fieldset>
             <label>

@@ -195,7 +195,7 @@ function drawCutTemplateInstructions(
     startY,
     stepHeight,
     stepNumber,
-    sides,
+    seamMode,
     templateSettings
 ) {
     doc.moveTo(doc.page.margins.left, convertUnits(startY, "in", "pt"))
@@ -207,7 +207,7 @@ function drawCutTemplateInstructions(
 
     doc.fontSize(fontSize).text(
         `${stepNumber}. Cut along the outermost edges to make your template piece${
-            sides === "∞" ? "s" : ""
+            seamMode === "base" ? "s" : ""
         }`,
         doc.page.margins.left,
         convertUnits(startY + 0.1, "in", "pt")
@@ -268,7 +268,7 @@ function drawCutClayInstructions(
     startY,
     stepHeight,
     stepNumber,
-    sides,
+    seamMode,
     shape,
     templateSettings
 ) {
@@ -282,7 +282,7 @@ function drawCutClayInstructions(
     const bevelAngleDegrees = shape.bevelAngleDegrees || 45;
     doc.fontSize(fontSize).text(
         `${stepNumber}. Cut ${
-            sides === "∞" ? "those pieces" : "that piece"
+            seamMode === "base" ? "those pieces" : "that piece"
         } out of your clay, using the bevel guide to help bevel the dotted edges at a ${bevelAngleDegrees}° angle`,
         doc.page.margins.left,
         convertUnits(startY + 0.1, "in", "pt")
@@ -357,7 +357,7 @@ function drawCutClayInstructions(
     let sideViewMidRightX = sideViewMidLeftX + convertUnits(0.25, "in", "pt");
     let sideViewTopRightX = sideViewMidRightX + convertUnits(0.25, "in", "pt");
     let sideViewBottomRightX = sideViewTopRightX + sideViewBottomDelta;
-    if (sides === "∞") {
+    if (seamMode === "base") {
         sideViewBottomRightX = sideViewTopRightX - sideViewBottomDelta;
     }
 
@@ -403,7 +403,13 @@ function drawCutClayInstructions(
     );
 }
 
-function drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides) {
+function drawAssembleInstructions(
+    doc,
+    startY,
+    stepHeight,
+    stepNumber,
+    seamMode
+) {
     doc.moveTo(doc.page.margins.left, convertUnits(startY, "in", "pt"))
         .lineTo(
             doc.page.width - doc.page.margins.right,
@@ -413,7 +419,7 @@ function drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides) {
 
     doc.fontSize(fontSize).text(
         `${stepNumber}. ${
-            sides === "∞"
+            seamMode === "base"
                 ? "Put the wall together and attach it to the base"
                 : "Fold the walls upwards"
         }`,
@@ -425,7 +431,14 @@ function drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides) {
 }
 
 function drawInstructions(doc, sides, shape, templateSettings) {
-    let { height, bottomWidth, topWidth, clayThickness, units } = shape;
+    let {
+        height,
+        bottomWidth,
+        topWidth,
+        clayThickness,
+        seamMode,
+        units,
+    } = shape;
     let { widthPages, heightPages } = templateSettings;
 
     doc.fontSize(fontSize);
@@ -465,7 +478,7 @@ function drawInstructions(doc, sides, shape, templateSettings) {
         startY,
         stepHeight,
         stepNumber,
-        sides,
+        seamMode,
         templateSettings
     );
     startY += stepHeight;
@@ -476,14 +489,14 @@ function drawInstructions(doc, sides, shape, templateSettings) {
         startY,
         stepHeight,
         stepNumber,
-        sides,
+        seamMode,
         shape,
         templateSettings
     );
     startY += stepHeight;
     stepNumber += 1;
 
-    drawAssembleInstructions(doc, startY, stepHeight, stepNumber, sides);
+    drawAssembleInstructions(doc, startY, stepHeight, stepNumber, seamMode);
 }
 
 export async function get(req, res, next) {
@@ -497,6 +510,7 @@ export async function get(req, res, next) {
         bottomWidth,
         topWidth,
         clayThickness,
+        seamMode,
         units,
         pageSize,
         noDownload,
@@ -507,12 +521,13 @@ export async function get(req, res, next) {
         bottomWidth,
         topWidth,
         clayThickness,
+        seamMode,
         units
     );
     res.setHeader("Content-Type", "application/pdf");
     if (!noDownload) {
         const type = sides === "∞" ? "circle" : "prism-" + sides;
-        const filename = `slabforge-${type}-${height}-${bottomWidth}-${topWidth}-${clayThickness}-${units}.pdf`;
+        const filename = `slabforge-${type}-${height}-${bottomWidth}-${topWidth}-${clayThickness}-${seamMode}-${units}.pdf`;
         res.setHeader(
             "Content-Disposition",
             `attachment; filename="${filename}"`

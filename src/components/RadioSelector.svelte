@@ -44,6 +44,7 @@
 </style>
 
 <fieldset>
+    <slot />
     <div>
         {#each effectiveOptions as item (item[0])}
             <input

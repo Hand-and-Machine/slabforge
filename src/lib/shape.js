@@ -1,4 +1,4 @@
-import { Geometry, Vector3, Face3, Color } from "three";
+import { Color, Face3, Geometry, Vector3 } from "three";
 import round from "lodash/round";
 
 const RED = new Color(0xff6633);
@@ -33,18 +33,31 @@ export function convertUnits(quantity, from, to) {
 }
 
 class Prism {
-    constructor(sides, height, bottomWidth, topWidth, clayThickness, units) {
+    constructor(
+        sides,
+        height,
+        bottomWidth,
+        topWidth,
+        clayThickness,
+        seamMode,
+        units
+    ) {
         this.sides = sides;
         this.height = height;
         this.bottomWidth = bottomWidth;
         this.topWidth = topWidth;
         this.clayThickness = clayThickness;
+        this.seamMode = seamMode;
         this.units = units;
     }
 
     get bevelAngleDegrees() {
-        let { bevelFactor } = this.doMath();
-        return round((bevelFactor / Math.PI) * 180, 2);
+        if (this.seamMode === "sides") {
+            let { bevelFactor } = this.doMath();
+            return round((bevelFactor / Math.PI) * 180, 2);
+        } else {
+            return 45;
+        }
     }
 
     doMath() {
@@ -72,6 +85,14 @@ class Prism {
     }
 
     calcWalls() {
+        if (this.seamMode === "sides") {
+            return this.calcWallsSidesSeam();
+        } else {
+            return this.calcWallsBaseSeam();
+        }
+    }
+
+    calcWallsSidesSeam() {
         const { sides, clayThickness } = this;
         const {
             bottomRadius,
@@ -81,7 +102,6 @@ class Prism {
         } = this.doMath();
         let base = "M ";
         const wallData = [];
-        const result = [];
         for (let k = 0; k < sides; k++) {
             const theta = (2 * Math.PI * k) / sides;
             const x = Math.cos(theta) * bottomRadius;
@@ -134,26 +154,181 @@ class Prism {
         const bevelGuideEndBottomY =
             bevelGuideEndTopY +
             Math.sin(midTheta + bevelFactor) * clayThickness;
-        result.push(
-            `M ${bevelGuideStartTopX},${bevelGuideStartTopY} L ${bevelGuideStartBottomX},${bevelGuideStartBottomY} ${bevelGuideEndBottomX},${bevelGuideEndBottomY} ${bevelGuideEndTopX},${bevelGuideEndTopY} z`
-        );
-        return [base, ...result];
+        let guide = `M ${bevelGuideStartTopX},${bevelGuideStartTopY} L ${bevelGuideStartBottomX},${bevelGuideStartBottomY} ${bevelGuideEndBottomX},${bevelGuideEndBottomY} ${bevelGuideEndTopX},${bevelGuideEndTopY} z`;
+        return [base, guide];
+    }
+
+    calcWallPointsBaseSeam() {
+        const { sides } = this;
+        const { bottomSideLen, topSideLen, wallLength } = this.doMath();
+        let outer = [];
+        let inner = [];
+        let minSideLen = Math.min(bottomSideLen, topSideLen);
+        let maxSideLen = Math.max(bottomSideLen, topSideLen);
+        let dTheta = Math.atan((maxSideLen - minSideLen) / wallLength / 2) * 2;
+        let totalTheta = dTheta * (sides - 1);
+
+        let x = 0;
+        let y = 0;
+        // ughhhhhhh
+        let transform = {
+            center: {
+                x: 0,
+                y: 0,
+            },
+            rotate: -totalTheta / 2,
+
+            apply(point) {
+                let relX = point.x - this.center.x;
+                let relY = point.y - this.center.y;
+                let rotX =
+                    relX * Math.cos(this.rotate) - relY * Math.sin(this.rotate);
+                let rotY =
+                    relX * Math.sin(this.rotate) + relY * Math.cos(this.rotate);
+                return {
+                    x: rotX + this.center.x,
+                    y: rotY + this.center.y,
+                };
+            },
+        };
+        for (let k = 0; k < sides; k++) {
+            let p1 = transform.apply({
+                x: x,
+                y: y,
+            });
+            let p2 = transform.apply({
+                x: x - Math.tan(dTheta / 2) * wallLength,
+                y: y - wallLength,
+            });
+            let p3 = transform.apply({
+                x: x - Math.tan(dTheta / 2) * wallLength + maxSideLen,
+                y: y - wallLength,
+            });
+            let p4 = transform.apply({
+                x: x + minSideLen,
+                y: y,
+            });
+            if (outer.length === 0) {
+                outer.push(p2);
+            }
+            outer.push(p3);
+            if (inner.length === 0) {
+                inner.push(p1);
+            }
+            inner.push(p4);
+            x = p4.x;
+            y = p4.y;
+            transform.center = p4;
+            transform.rotate += dTheta;
+        }
+
+        const xs = [];
+        const ys = [];
+        for (const p of outer.concat(inner)) {
+            xs.push(p.x);
+            ys.push(p.y);
+        }
+
+        let left = Math.min(...xs);
+        let right = Math.max(...xs);
+        let bottom = Math.max(...ys);
+
+        let width = right - left;
+        for (let point of inner.concat(outer)) {
+            point.x -= width / 2 + left;
+            point.y -= bottom;
+        }
+
+        return {
+            outer,
+            inner,
+        };
+    }
+
+    calcWallsBaseSeam() {
+        const { sides, clayThickness } = this;
+        const { bottomRadius, bottomSideLen, topSideLen } = this.doMath();
+
+        let base = "M ";
+        for (let k = 0; k < sides; k++) {
+            const theta = (2 * Math.PI * k) / sides;
+            const x = Math.cos(theta) * (bottomRadius + clayThickness);
+            const y =
+                Math.sin(theta) * (bottomRadius + clayThickness) +
+                bottomRadius +
+                1;
+            base += `${x},${y} `;
+        }
+        base += "z";
+
+        let outerWalls = "";
+        let innerWalls = "";
+        const { outer, inner } = this.calcWallPointsBaseSeam();
+        for (let i = 0; i < outer.length; i++) {
+            let j = inner.length - 1 - i;
+            outerWalls += `${outer[i].x},${outer[i].y} `;
+            innerWalls += `${inner[j].x},${inner[j].y} `;
+        }
+        let walls = `M ${outerWalls}${innerWalls}z`;
+
+        // calculate the bevel guide
+        const minSideLen = Math.min(bottomSideLen, topSideLen);
+        const bevelGuideLength = sides * minSideLen;
+        const outerBottomWidth = 2 * (bottomRadius + clayThickness);
+        const guide =
+            `M ${bevelGuideLength / 2 + clayThickness / 2},${
+                outerBottomWidth + 2
+            } ` +
+            `L ${bevelGuideLength / 2 - clayThickness / 2},${
+                outerBottomWidth + 2 + clayThickness
+            } ` +
+            `${-bevelGuideLength / 2 - clayThickness / 2},${
+                outerBottomWidth + 2 + clayThickness
+            } ` +
+            `${-bevelGuideLength / 2 + clayThickness / 2},${
+                outerBottomWidth + 2
+            } z`;
+        return [base, walls, guide];
     }
 
     calcCreaseMarkers() {
-        const { sides } = this;
-        const { bottomRadius } = this.doMath();
-        let result = "M ";
-        for (let k = 0; k < sides; k++) {
-            const theta = (2 * Math.PI * k) / sides;
-            const x = Math.cos(theta) * bottomRadius;
-            const y = Math.sin(theta) * bottomRadius;
-            result += `${x},${y} `;
+        if (this.seamMode === "sides") {
+            const { sides } = this;
+            const { bottomRadius } = this.doMath();
+            let result = "M ";
+            for (let k = 0; k < sides; k++) {
+                const theta = (2 * Math.PI * k) / sides;
+                const x = Math.cos(theta) * bottomRadius;
+                const y = Math.sin(theta) * bottomRadius;
+                result += `${x},${y} `;
+            }
+            return [result + "z"];
+        } else {
+            const { outer, inner } = this.calcWallPointsBaseSeam();
+            let result = [];
+            for (let i = 1; i < outer.length - 1; i++) {
+                result.push(
+                    `M ${outer[i].x},${outer[i].y} ${inner[i].x},${inner[i].y}`
+                );
+            }
+            return result;
         }
-        return [result + "z"];
     }
 
     calcBevelMarkers() {
+        if (this.seamMode === "sides") {
+            return this.calcBevelMarkersSidesSeam();
+        } else {
+            const { outer, inner } = this.calcWallPointsBaseSeam();
+            const i = outer.length - 1;
+            return [
+                `M ${outer[0].x},${outer[0].y} ${inner[0].x},${inner[0].y}`,
+                `M ${outer[i].x},${outer[i].y} ${inner[i].x},${inner[i].y}`,
+            ];
+        }
+    }
+
+    calcBevelMarkersSidesSeam() {
         const { sides } = this;
         const { bottomRadius, topSideLen, wallLength } = this.doMath();
         let base = "M ";
@@ -500,6 +675,10 @@ class Conic {
         };
     }
 
+    get seamMode() {
+        return "base";
+    }
+
     calcWalls() {
         const { bottomWidth, clayThickness } = this;
         const { bottomRadius, topRadius, wallLength } = this.doMath();
@@ -635,6 +814,7 @@ export default function makeShape(
     bottomWidth,
     topWidth,
     clayThickness,
+    seamMode,
     units
 ) {
     if (sides === "∞") {
@@ -652,6 +832,7 @@ export default function makeShape(
             parseFloat(bottomWidth),
             parseFloat(topWidth),
             parseFloat(clayThickness),
+            seamMode,
             units
         );
     }

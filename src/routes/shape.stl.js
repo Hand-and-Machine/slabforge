@@ -23,8 +23,8 @@ export async function get(req, res, next) {
         bottomWidth,
         topWidth,
         clayThickness,
+        seamMode,
         units,
-        pageSize,
     } = Object.fromEntries(params.entries());
     const shape = makeShape(
         sides,
@@ -32,6 +32,7 @@ export async function get(req, res, next) {
         bottomWidth,
         topWidth,
         clayThickness,
+        seamMode,
         units
     );
     res.setHeader("Content-Type", "model/x.stl-binary");

@@ -23,8 +23,8 @@ export async function get(req, res, next) {
         bottomWidth,
         topWidth,
         clayThickness,
+        seamMode,
         units,
-        pageSize,
     } = Object.fromEntries(params.entries());
     console.log(params);
     const shape = makeShape(
@@ -33,6 +33,7 @@ export async function get(req, res, next) {
         parseFloat(bottomWidth) + parseFloat(clayThickness),
         parseFloat(topWidth) + parseFloat(clayThickness),
         convertUnits(0.5, "cm", units),
+        seamMode,
         units
     );
     console.log(shape);
