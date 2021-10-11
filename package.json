@@ -5,7 +5,7 @@
     "private": true,
     "scripts": {
         "dev": "sapper dev",
-        "build": "npx sapper build --legacy",
+        "postinstall": "sapper build --legacy",
         "export": "sapper export --legacy",
         "start": "node __sapper__/build",
         "cy:run": "cypress run",
@@ -42,6 +42,6 @@
         "svelte": "^3.0.0"
     },
     "engines": {
-      "node": "14.x"
+        "node": "14.x"
     }
 }
