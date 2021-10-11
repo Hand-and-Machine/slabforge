@@ -17,7 +17,7 @@
         "compression": "^1.7.1",
         "lodash": "^4.17.21",
         "pdfkit": "^0.11.0",
-        "polka": "next",
+        "polka": "1.0.0-next.22",
         "sirv": "^0.4.0",
         "three": "^0.124.0",
         "uuid": "^8.2.0"
